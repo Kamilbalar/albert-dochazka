@@ -3,324 +3,189 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Albert Facility PRO - Cyberpunk Edition</title>
+    <title>Albert Facility PRO - AI Master</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&display=swap" rel="stylesheet">
     <style>
         ::-webkit-scrollbar { display: none; }
         .font-digital { font-family: 'Orbitron', sans-serif; }
-        .glass-panel {
-            background: rgba(15, 23, 42, 0.6);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-        }
+        .glass-panel { background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1px solid rgba(255, 255, 255, 0.08); }
         .neon-text-blue { text-shadow: 0 0 10px rgba(56, 189, 248, 0.8); }
         .neon-text-green { text-shadow: 0 0 10px rgba(52, 211, 153, 0.8); }
+        .neon-text-orange { text-shadow: 0 0 10px rgba(249, 115, 22, 0.8); }
+
+        .toggle-checkbox:checked { right: 0; border-color: #f97316; }
+        .toggle-checkbox:checked + .toggle-label { background-color: #c2410c; }
+
+        /* TISKOVÉ STYLY PRO PDF VÝKAZ (Kopie TSC papíru) */
+        @media print {
+            body { background: white !important; color: black !important; padding: 0 !important; margin: 0; font-family: sans-serif; }
+            .no-print { display: none !important; }
+            #tiskovy-vykaz { display: block !important; width: 100%; max-width: 1000px; margin: 0 auto; }
+            
+            .tsc-header { display: flex; justify-content: space-between; border-bottom: 3px solid black; padding-bottom: 10px; margin-bottom: 20px; }
+            .tsc-title { text-align: center; font-size: 24px; font-weight: bold; background: #e5e7eb; -webkit-print-color-adjust: exact; padding: 5px; margin-bottom: 20px;}
+            .tsc-info { display: flex; justify-content: space-between; margin-bottom: 10px; font-weight: bold; }
+            
+            table { width: 100%; border-collapse: collapse; margin-bottom: 30px; }
+            th, td { border: 2px solid black; padding: 10px; text-align: left; vertical-align: top; }
+            th { text-align: center; font-size: 12px; font-weight: bold; }
+            .col-bu { width: 15%; }
+            .col-rm { width: 8%; text-align: center; }
+            .col-popis { width: 45%; }
+            .col-mat { width: 20%; }
+            .col-hod { width: 12%; text-align: center; font-weight: bold; font-size: 16px; }
+            
+            .signature-box { display: flex; justify-content: space-between; margin-top: 50px; }
+            .sig-line { border-top: 1px solid black; width: 250px; text-align: center; padding-top: 5px; font-size: 12px; font-weight: bold; }
+            tr { page-break-inside: avoid; }
+        }
     </style>
 </head>
 <body class="bg-[#050b14] bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-slate-900 via-[#050b14] to-black text-slate-100 p-4 font-sans text-sm pb-10 min-h-screen">
 
-    <div class="max-w-md mx-auto glass-panel rounded-[2rem] shadow-[0_0_50px_-15px_rgba(56,189,248,0.3)] overflow-hidden relative">
+    <div class="max-w-md mx-auto glass-panel rounded-[2rem] shadow-[0_0_50px_-15px_rgba(56,189,248,0.3)] overflow-hidden relative no-print">
         
-        <!-- AUTO-SYNC STATUS -->
-        <div id="sync-badge" class="absolute top-3 right-3 text-[9px] bg-rose-600/80 backdrop-blur-md text-white px-3 py-1 rounded-full hidden animate-pulse border border-rose-400 shadow-[0_0_10px_rgba(225,29,72,0.6)] z-50">
-            ⚠ CLOUD SYNC PENDING
-        </div>
-
-        <!-- DASHBOARD (Hlavička) -->
-        <div class="bg-gradient-to-r from-blue-900/50 to-cyan-900/30 p-5 border-b border-cyan-500/20 flex justify-between items-center">
+        <div class="bg-gradient-to-r from-blue-900/50 to-cyan-900/30 p-5 border-b border-cyan-500/20 grid grid-cols-2 gap-2 text-center">
             <div>
-                <div class="text-[9px] text-cyan-400 uppercase font-black tracking-widest mb-1 opacity-80">Měsíční cyklus</div>
-                <div class="text-2xl font-digital font-bold text-white neon-text-blue" id="stat-hodiny">0h 0m</div>
+                <div class="text-[8px] text-cyan-400 uppercase font-black tracking-widest mb-1 opacity-80">Reálný Paušál</div>
+                <div class="text-xl font-digital font-bold text-white neon-text-blue" id="stat-hodiny">0h 0m</div>
             </div>
-            <div class="text-right">
-                <div class="text-[9px] text-emerald-400 uppercase font-black tracking-widest mb-1 opacity-80">Rozpočet</div>
-                <div class="text-2xl font-digital font-bold text-emerald-400 neon-text-green" id="stat-naklady">0 Kč</div>
+            <div class="border-l border-cyan-500/30 pl-2">
+                <div class="text-[8px] text-orange-400 uppercase font-black tracking-widest mb-1 opacity-80">Práce Navíc (Šéf)</div>
+                <div class="text-xl font-digital font-bold text-orange-400 neon-text-orange" id="stat-navic">0h 0m</div>
             </div>
         </div>
 
         <div class="p-6 space-y-6">
-            <!-- Datum a Chytrá Prodejna -->
-            <div class="grid grid-cols-2 gap-4">
-                <div class="relative group">
-                    <label class="block text-[9px] font-black text-slate-400 uppercase tracking-wider mb-2 ml-1">Datum</label>
-                    <input type="date" id="datum-prace" class="w-full bg-slate-800/50 border border-slate-600/50 p-3 rounded-2xl text-cyan-100 outline-none focus:border-cyan-400 focus:shadow-[0_0_15px_rgba(34,211,238,0.3)] transition-all">
-                </div>
-                <div class="relative group">
-                    <label class="block text-[9px] font-black text-slate-400 uppercase tracking-wider mb-2 ml-1 flex justify-between">
-                        <span>Lokalita</span> 
-                        <span id="auto-lokace" class="text-emerald-400 text-[9px] hidden font-bold animate-pulse neon-text-green">LOCKED</span>
-                    </label>
-                    <select id="prodejna" class="w-full bg-slate-800/50 border border-slate-600/50 p-3 rounded-2xl text-cyan-100 outline-none focus:border-cyan-400 focus:shadow-[0_0_15px_rgba(34,211,238,0.3)] transition-all">
-                        <option value="">Skenuji oblast...</option>
-                        <optgroup label="Třebíč a okolí">
-                            <option value="171">171 - Třebíč</option><option value="851">851 - Třebíč</option>
-                            <option value="403">403 - Třebíč</option><option value="735">735 - Třebíč</option>
-                            <option value="Okříšky">Okříšky</option>
-                        </optgroup>
-                        <optgroup label="Brno a okolí">
-                            <option value="025">025 - Brno</option><option value="022">022 - Brno</option>
-                            <option value="026">026 - Brno</option><option value="125">125 - Rosice</option>
-                        </optgroup>
-                        <optgroup label="Jindřichův Hradec">
-                            <option value="354">354 - J. Hradec</option><option value="334">334 - J. Hradec</option>
-                        </optgroup>
+            
+            <div class="bg-slate-800/30 p-4 rounded-2xl border border-slate-700/50">
+                <h2 class="text-[10px] font-black text-cyan-400 uppercase tracking-widest mb-4">Manuální měření (Reálný čas)</h2>
+                
+                <div class="grid grid-cols-2 gap-3 mb-3">
+                    <input type="date" id="datum-prace" class="w-full bg-slate-900/80 border border-slate-600/50 p-3 rounded-xl text-cyan-100 outline-none text-xs">
+                    <select id="prodejna" class="w-full bg-slate-900/80 border border-slate-600/50 p-3 rounded-xl text-cyan-100 outline-none text-xs">
+                        <option value="">Lokalita...</option>
+                        <option value="171">171 - Třebíč</option><option value="851">851 - Třebíč</option><option value="403">403 - Třebíč</option><option value="Okříšky">Okříšky</option>
+                        <option value="025">025 - Brno</option><option value="022">022 - Brno</option><option value="026">026 - Brno</option><option value="125">125 - Rosice</option>
+                        <option value="354">354 - J. Hradec</option><option value="334">334 - J. Hradec</option>
                     </select>
                 </div>
-            </div>
 
-            <!-- Cestovné a Náklady -->
-            <div class="grid grid-cols-2 gap-4">
-                <div class="bg-slate-800/50 border border-slate-600/50 p-3 rounded-2xl flex items-center focus-within:border-cyan-400 focus-within:shadow-[0_0_15px_rgba(34,211,238,0.3)] transition-all">
-                    <span class="text-lg pl-1 pr-2 opacity-70">🚗</span>
-                    <input type="number" id="kilometry" placeholder="KM" class="w-full bg-transparent text-white outline-none font-bold placeholder-slate-500">
+                <div class="bg-slate-900/50 border border-slate-600/50 p-3 rounded-xl flex justify-between items-center mb-3">
+                    <div>
+                        <div class="text-[10px] font-bold text-white uppercase tracking-widest">Typ Práce</div>
+                        <div class="text-[8px] text-slate-400 mt-1">Zaklikni, pokud je to práce MIMO paušál</div>
+                    </div>
+                    <div class="relative inline-block w-10 mr-2 align-middle select-none transition duration-200 ease-in">
+                        <input type="checkbox" id="typ-prace" class="toggle-checkbox absolute block w-5 h-5 rounded-full bg-white border-4 border-slate-700 appearance-none cursor-pointer z-10 top-0 left-0"/>
+                        <label for="typ-prace" class="toggle-label block overflow-hidden h-5 rounded-full bg-slate-700 cursor-pointer"></label>
+                    </div>
                 </div>
-                <div class="bg-slate-800/50 border border-slate-600/50 p-3 rounded-2xl flex items-center focus-within:border-emerald-400 focus-within:shadow-[0_0_15px_rgba(52,211,153,0.3)] transition-all">
-                    <span class="text-lg pl-1 pr-2 opacity-70">💰</span>
-                    <input type="number" id="naklady" placeholder="Kč" class="w-full bg-transparent text-white outline-none font-bold placeholder-slate-500">
-                </div>
-            </div>
 
-            <!-- SMART POPIS PRÁCE -->
-            <div class="bg-slate-800/30 p-4 rounded-2xl border border-slate-700/50 relative overflow-hidden">
-                <div class="absolute top-0 left-0 w-1 h-full bg-cyan-500 shadow-[0_0_10px_rgba(6,182,212,0.8)]"></div>
+                <textarea id="popis" rows="2" class="w-full bg-slate-900/80 border border-slate-600/50 p-3 rounded-xl text-cyan-50 outline-none text-xs mb-3" placeholder="Popis práce..."></textarea>
+
+                <div id="timer-ui" class="bg-[#020617] p-4 rounded-xl text-center border border-cyan-500/30 hidden mb-3">
+                    <div id="clock" class="text-4xl font-digital font-black text-white tracking-widest neon-text-blue">00:00:00</div>
+                </div>
                 
-                <div class="flex justify-between items-center mb-3 pl-2">
-                    <label class="block text-[9px] font-black text-cyan-400 uppercase tracking-widest">Záznam operace</label>
-                    <button onclick="spustitDiktovani()" id="btn-mikrofon" class="bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white px-4 py-1.5 rounded-full text-xs font-bold shadow-[0_0_15px_rgba(6,182,212,0.4)] transition-all flex items-center gap-2">
-                        <span>🎙️</span> Inicializovat hlas
+                <button id="btn-start" onclick="startPrace()" class="w-full bg-gradient-to-r from-emerald-500 to-teal-500 py-4 rounded-xl font-black text-sm uppercase tracking-widest">START MĚŘENÍ</button>
+                <button id="btn-stop" onclick="stopPrace()" class="hidden w-full bg-gradient-to-r from-rose-600 to-red-600 py-4 rounded-xl font-black text-sm uppercase tracking-widest">UKONČIT & ULOŽIT</button>
+
+                <button onclick="generovatReportSefovi()" class="w-full bg-slate-800 border border-orange-500/50 p-3 rounded-xl font-bold text-[9px] uppercase tracking-widest text-orange-400 mt-3">
+                    📋 Zkopírovat report pro Šéfa
+                </button>
+            </div>
+
+            <div class="bg-amber-900/20 border border-amber-500/30 p-5 rounded-2xl relative overflow-hidden shadow-[0_0_20px_rgba(245,158,11,0.1)]">
+                <div class="absolute top-0 left-0 w-1 h-full bg-amber-500 shadow-[0_0_10px_rgba(245,158,11,0.8)]"></div>
+                <h2 class="text-xs font-black text-amber-500 uppercase tracking-widest mb-4">🤖 AI Generátor (Pro Albert)</h2>
+
+                <div class="space-y-3">
+                    <select id="ai-prodejna" class="w-full bg-slate-900/80 border border-amber-500/50 p-3 rounded-xl text-amber-100 outline-none focus:border-amber-400 text-xs font-bold">
+                        <option value="851">851 - Třebíč (32h - Rozloženo)</option>
+                        <option value="403">403 - Třebíč (19h - Rozloženo)</option>
+                        <option value="171">171 - Třebíč (19h - Rozloženo)</option>
+                        <option value="025">025 - Brno (Cca 3h - NEPRAVIDELNÁ)</option>
+                        <option value="Okříšky">Okříšky (Cca 3h - NEPRAVIDELNÁ)</option>
+                    </select>
+
+                    <input type="text" id="ai-cislo-an" value="AP2608544" class="w-full bg-slate-900/80 border border-amber-500/50 p-3 rounded-xl text-amber-100 outline-none font-bold text-xs" title="Číslo AN">
+
+                    <button onclick="vygenerujA_Vytiskni()" class="w-full bg-gradient-to-r from-amber-600 to-orange-600 py-4 rounded-xl font-bold uppercase tracking-widest shadow-[0_0_15px_rgba(245,158,11,0.4)] text-xs">
+                        ⚙️ Vygenerovat měsíc do PDF
                     </button>
                 </div>
-
-                <div class="flex flex-wrap gap-2 mb-3 pl-2">
-                    <button onclick="pridejStitek('Elektro')" class="bg-slate-800 border border-slate-600 hover:border-cyan-400 hover:text-cyan-400 px-3 py-1 rounded-full text-[10px] font-bold transition-all">⚡ Elektro</button>
-                    <button onclick="pridejStitek('Dlažba')" class="bg-slate-800 border border-slate-600 hover:border-cyan-400 hover:text-cyan-400 px-3 py-1 rounded-full text-[10px] font-bold transition-all">🧱 Dlažba</button>
-                    <button onclick="pridejStitek('Voda')" class="bg-slate-800 border border-slate-600 hover:border-cyan-400 hover:text-cyan-400 px-3 py-1 rounded-full text-[10px] font-bold transition-all">🚰 Voda</button>
-                    <button onclick="pridejStitek('Prevence')" class="bg-slate-800 border border-slate-600 hover:border-cyan-400 hover:text-cyan-400 px-3 py-1 rounded-full text-[10px] font-bold transition-all">🔍 Prevence</button>
-                </div>
-
-                <select id="sablona" onchange="vlozSablonu()" class="w-full bg-slate-900/50 border border-slate-600/50 p-2.5 rounded-xl text-xs text-slate-300 outline-none mb-3 focus:border-cyan-400 transition-all ml-2 w-[calc(100%-0.5rem)]">
-                    <option value="">Databáze šablon...</option>
-                    <option value="Oprava dilatačních spár (butylenový tmel).">Oprava podlahy (dilatační spáry)</option>
-                    <option value="Výměna osvětlení ve výšce (plošina).">Výměna světel ve výšce</option>
-                    <option value="Výměna prasklé dlažby (vybourání, lepení).">Oprava dlažby</option>
-                </select>
-                
-                <textarea id="popis" rows="3" class="w-full bg-black/40 border border-slate-600/50 p-3 rounded-xl text-cyan-50 outline-none focus:border-cyan-400 focus:shadow-[0_0_15px_rgba(6,182,212,0.2)] transition-all ml-2 w-[calc(100%-0.5rem)] placeholder-slate-600" placeholder="Čekám na vstupní data..."></textarea>
             </div>
 
-            <!-- Nákupní seznam -->
-            <div class="bg-amber-900/20 border border-amber-500/30 p-4 rounded-2xl relative overflow-hidden">
-                <div class="absolute top-0 left-0 w-1 h-full bg-amber-500 shadow-[0_0_10px_rgba(245,158,11,0.8)]"></div>
-                <label class="block text-[9px] font-black text-amber-500 uppercase tracking-widest mb-2 pl-2">🛒 Požadavek na materiál</label>
-                <textarea id="poznamka-priste" rows="1" oninput="ulozitNakup()" class="w-full bg-transparent text-amber-100 outline-none placeholder-amber-900/50 pl-2 font-bold" placeholder="Definuj chybějící položky..."></textarea>
-            </div>
-
-            <!-- FUTURISTICKÉ STOPKY -->
-            <div id="timer-ui" class="bg-[#020617] p-6 rounded-[2rem] text-center border border-cyan-500/30 hidden shadow-[inset_0_0_30px_rgba(6,182,212,0.1)] relative overflow-hidden">
-                <div class="absolute -top-10 -left-10 w-32 h-32 bg-cyan-500/20 rounded-full blur-3xl"></div>
-                <div class="absolute -bottom-10 -right-10 w-32 h-32 bg-blue-600/20 rounded-full blur-3xl"></div>
-                
-                <div id="clock" class="text-6xl font-digital font-black text-white tracking-widest neon-text-blue relative z-10">00:00:00</div>
-                <div id="gps-status" class="text-[9px] font-bold text-cyan-500 mt-4 tracking-widest uppercase relative z-10">⏳ Inicializace satelitního spojení...</div>
-            </div>
-
-            <!-- Tlačítka Start/Stop a Kalendář -->
-            <div class="flex flex-col gap-3 pt-2">
-                <button id="btn-start" onclick="startPrace()" class="w-full bg-gradient-to-r from-emerald-500 to-teal-500 py-5 rounded-2xl font-black shadow-[0_0_20px_rgba(16,185,129,0.4)] hover:shadow-[0_0_30px_rgba(16,185,129,0.6)] hover:scale-[1.02] active:scale-95 transition-all text-xl uppercase tracking-widest border border-emerald-400/50">
-                    START SEKVENCI
-                </button>
-                <button id="btn-stop" onclick="stopPrace()" class="hidden w-full bg-gradient-to-r from-rose-600 to-red-600 py-5 rounded-2xl font-black shadow-[0_0_20px_rgba(225,29,72,0.4)] hover:shadow-[0_0_30px_rgba(225,29,72,0.6)] hover:scale-[1.02] active:scale-95 transition-all text-xl uppercase tracking-widest border border-rose-400/50">
-                    UKONČIT & ULOŽIT
-                </button>
-                
-                <button id="btn-kalendar" onclick="stahnoutKalendar()" class="hidden w-full bg-slate-800 border border-cyan-500/50 py-4 rounded-2xl font-bold hover:bg-slate-700 hover:shadow-[0_0_15px_rgba(6,182,212,0.3)] active:scale-95 transition-all text-sm uppercase tracking-widest flex items-center justify-center gap-2 text-cyan-400">
-                    <span>📅</span> Exportovat do kalendáře
-                </button>
-            </div>
-
-            <!-- HISTORIE ZÁZNAMŮ -->
-            <div class="mt-8 border-t border-slate-700/50 pt-6">
-                <h3 class="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-4">Systémový log (Poslední záznamy)</h3>
-                <div id="historie-seznam" class="space-y-3"></div>
-            </div>
         </div>
     </div>
 
-    <!-- ZDE ZAČÍNÁ JAVASCRIPT (Logika zůstává beze změny) -->
-    <script>
-        const CLOUD_URL = "https://script.google.com/macros/s/AKfycbxofi-HJn-QOuT_908ccgA74PgfrQm2ZETr4hgOsgtYFCp59KbmOAP18hQ8kjj_brqk/exec";
-        
-        const SOURADNICE_PRODEJEN = {
-            "171": { lat: 49.214, lon: 15.881 }, 
-            "851": { lat: 49.215, lon: 15.885 },
-            "403": { lat: 49.210, lon: 15.870 },
-            "Okříšky": { lat: 49.245, lon: 15.768 },
-            "125": { lat: 49.182, lon: 16.388 }, 
-            "025": { lat: 49.195, lon: 16.606 }  
-        };
+    <div id="tiskovy-vykaz" class="hidden">
+        <div class="tsc-header">
+            <div><strong>Sídlo:</strong><br><span style="font-size: 10px;">TSC Facility, s.r.o.<br>Stodolní 316/2<br>702 00 Ostrava</span></div>
+            <div style="font-size: 28px; font-weight: 900; align-self: center;">TSC Group</div>
+            <div style="text-align: right;"><strong>Pobočka:</strong><br><span style="font-size: 10px;">TSC Facility, s.r.o.<br>Pobřežní 620/3<br>180 00 Praha 8</span></div>
+        </div>
 
-        let startTime = null;
-        let timerInterval = null;
-        let gpsLokace = "Nezjištěna";
-        let posledniZaznam = null;
+        <div class="tsc-title">PRACOVNÍ LIST</div>
+
+        <div class="tsc-info">
+            <div>Zákazník: <span id="print-prodejna" style="border-bottom: 1px dotted black; padding: 0 20px; font-size: 18px;">---</span></div>
+            <div>Měsíc/Rok: <span id="print-datum" style="border-bottom: 1px dotted black; padding: 0 20px;"></span></div>
+        </div>
+        <div class="tsc-info">
+            <div>Technik: <span style="border-bottom: 1px dotted black; padding: 0 20px; font-size: 18px;">BALCAR</span></div>
+        </div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th class="col-bu">BÚ / Číslo AN</th>
+                    <th class="col-rm">RM_S<br>ANO/NE</th>
+                    <th class="col-popis">Druh a popis práce</th>
+                    <th class="col-mat">Použitý materiál</th>
+                    <th class="col-hod">Odpracované<br>hodiny</th>
+                </tr>
+            </thead>
+            <tbody id="print-tbody"></tbody>
+        </table>
+
+        <div class="signature-box">
+            <div><p style="font-size: 10px; margin-bottom: 40px;">Za poskytovatele:</p><div class="sig-line">Jméno a Podpis (BALCAR)</div></div>
+            <div style="text-align: right;"><p style="font-size: 10px; margin-bottom: 40px; text-align: left;">Za Albert:</p><div class="sig-line" style="width: 300px;">Jméno, razítko, podpis manažera</div></div>
+        </div>
+    </div>
+
+    <script>
+        let startTime = null; let timerInterval = null;
 
         window.onload = () => {
             document.getElementById('datum-prace').value = new Date().toISOString().split('T')[0];
-            document.getElementById('poznamka-priste').value = localStorage.getItem('albert_nakup') || "";
+            const nazvyMesicu = ["Leden", "Únor", "Březen", "Duben", "Květen", "Červen", "Červenec", "Srpen", "Září", "Říjen", "Listopad", "Prosinec"];
+            const d = new Date();
+            document.getElementById('print-datum').innerText = `${nazvyMesicu[d.getMonth()]} ${d.getFullYear()}`;
+            
             vypocitejStatistiky();
-            vykresliHistorii(); 
-            zkusOdeslatFrontu(); 
-            najdiPolohuAObchod(); 
-            
-            if (localStorage.getItem('active_timer')) {
-                startTime = new Date(localStorage.getItem('active_timer'));
-                rezimBehu();
-            }
+            if (localStorage.getItem('active_timer')) { startTime = new Date(localStorage.getItem('active_timer')); rezimBehu(); }
         };
-
-        function vykresliHistorii() {
-            const db = JSON.parse(localStorage.getItem('albert_final_db') || "[]");
-            const kontejner = document.getElementById('historie-seznam');
-            kontejner.innerHTML = "";
-            if (db.length === 0) return kontejner.innerHTML = '<div class="text-xs text-slate-500 italic font-mono">Log je prázdný...</div>';
-            
-            db.slice(-3).reverse().forEach(z => {
-                kontejner.innerHTML += `
-                    <div class="glass-panel p-3 rounded-xl border-l-2 border-l-cyan-500">
-                        <div class="flex justify-between items-center mb-1">
-                            <span class="text-xs font-bold text-cyan-300">Albert ${z.prodejna}</span>
-                            <span class="text-[10px] text-slate-400 font-mono">${z.datum} | ${z.trvani}m</span>
-                        </div>
-                        <div class="text-xs text-slate-300 truncate">${z.popis}</div>
-                    </div>`;
-            });
-        }
 
         function vypocitejStatistiky() {
             const db = JSON.parse(localStorage.getItem('albert_final_db') || "[]");
             const aktualniMesic = new Date().toISOString().slice(0, 7);
-            let min = 0, kc = 0;
+            let minPausal = 0, minNavic = 0;
             db.forEach(z => {
                 if (z.datum.startsWith(aktualniMesic)) {
-                    min += parseInt(z.trvani) || 0;
-                    kc += parseInt(z.naklady) || 0;
+                    if (z.typ === 'navic') minNavic += parseInt(z.trvani) || 0;
+                    else minPausal += parseInt(z.trvani) || 0;
                 }
             });
-            document.getElementById('stat-hodiny').innerText = `${Math.floor(min / 60)}h ${min % 60}m`;
-            document.getElementById('stat-naklady').innerText = `${kc} Kč`;
-        }
-
-        function ulozitNakup() { localStorage.setItem('albert_nakup', document.getElementById('poznamka-priste').value); }
-        function vibruj() { if (navigator.vibrate) navigator.vibrate(100); }
-
-        function pridejStitek(text) {
-            const pole = document.getElementById('popis');
-            pole.value = pole.value ? pole.value + " [" + text + "]" : "[" + text + "]";
-        }
-
-        function vlozSablonu() {
-            const vybrana = document.getElementById('sablona').value;
-            if(vybrana) {
-                const pole = document.getElementById('popis');
-                pole.value = pole.value ? pole.value + " " + vybrana : vybrana;
-                document.getElementById('sablona').value = ""; 
-            }
-        }
-
-        function spustitDiktovani() {
-            vibruj();
-            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-            if (!SpeechRecognition) return alert("Prohlížeč nepodporuje diktování.");
-            const rozpoznavani = new SpeechRecognition();
-            rozpoznavani.lang = 'cs-CZ';
-            const btn = document.getElementById('btn-mikrofon');
-            
-            rozpoznavani.onstart = () => { 
-                btn.innerHTML = '🔴 Příjem audia...'; 
-                btn.classList.replace('from-cyan-600', 'from-rose-600');
-                btn.classList.replace('to-blue-600', 'to-red-600');
-            };
-            rozpoznavani.onresult = (e) => {
-                const pole = document.getElementById('popis');
-                pole.value = pole.value ? pole.value + " " + e.results[0][0].transcript : e.results[0][0].transcript;
-            };
-            rozpoznavani.onend = () => { 
-                btn.innerHTML = '🎙️ Inicializovat hlas'; 
-                btn.classList.replace('from-rose-600', 'from-cyan-600');
-                btn.classList.replace('to-red-600', 'to-blue-600');
-            };
-            rozpoznavani.start();
-        }
-
-        function vypocitejVzdalenost(lat1, lon1, lat2, lon2) {
-            const R = 6371;
-            const dLat = (lat2 - lat1) * Math.PI / 180;
-            const dLon = (lon2 - lon1) * Math.PI / 180;
-            const a = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon/2) * Math.sin(dLon/2);
-            return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-        }
-
-        function najdiPolohuAObchod() {
-            if ("geolocation" in navigator) {
-                navigator.geolocation.getCurrentPosition(
-                    p => {
-                        const lat = p.coords.latitude;
-                        const lon = p.coords.longitude;
-                        gpsLokace = `https://maps.google.com/?q=${lat},${lon}`;
-                        
-                        let nejblizsi = null;
-                        let minVzdalenost = 5; 
-
-                        for (const [id, coords] of Object.entries(SOURADNICE_PRODEJEN)) {
-                            let dist = vypocitejVzdalenost(lat, lon, coords.lat, coords.lon);
-                            if (dist < minVzdalenost) { 
-                                minVzdalenost = dist; 
-                                nejblizsi = id; 
-                            }
-                        }
-
-                        if (nejblizsi) {
-                            const select = document.getElementById('prodejna');
-                            select.value = nejblizsi;
-                            select.classList.replace('bg-slate-800/50', 'bg-emerald-900/30');
-                            select.classList.replace('border-slate-600/50', 'border-emerald-500/50');
-                            document.getElementById('auto-lokace').classList.remove('hidden');
-                            document.getElementById('gps-status').innerHTML = `📍 CÍL ZAMĚŘEN: ${minVzdalenost.toFixed(1)} km od [${nejblizsi}]`;
-                            document.getElementById('gps-status').className = "text-[9px] mt-4 font-bold text-emerald-400 tracking-widest uppercase relative z-10";
-                        } else {
-                            document.getElementById('gps-status').innerHTML = `📍 LOKACE ZAMĚŘENA (MIMO ZÓNU)`;
-                        }
-                    },
-                    e => { document.getElementById('gps-status').innerText = "⚠️ GPS OFFLINE"; },
-                    { enableHighAccuracy: true }
-                );
-            }
-        }
-
-        async function zkusOdeslatFrontu() {
-            let fronta = JSON.parse(localStorage.getItem('albert_sync_fronta') || "[]");
-            if (fronta.length === 0) return;
-            
-            document.getElementById('sync-badge').classList.remove('hidden');
-            let zbyvaVeFronte = [];
-            for (let zaznam of fronta) {
-                try {
-                    await fetch(CLOUD_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(zaznam) });
-                } catch (e) { zbyvaVeFronte.push(zaznam); }
-            }
-            localStorage.setItem('albert_sync_fronta', JSON.stringify(zbyvaVeFronte));
-            if (zbyvaVeFronte.length === 0) document.getElementById('sync-badge').classList.add('hidden');
+            document.getElementById('stat-hodiny').innerText = `${Math.floor(minPausal / 60)}h ${minPausal % 60}m`;
+            document.getElementById('stat-navic').innerText = `${Math.floor(minNavic / 60)}h ${minNavic % 60}m`;
         }
 
         function startPrace() {
-            vibruj();
-            startTime = new Date();
-            localStorage.setItem('active_timer', startTime.toISOString());
-            document.getElementById('btn-kalendar').classList.add('hidden'); 
-            rezimBehu();
-            najdiPolohuAObchod();
+            startTime = new Date(); localStorage.setItem('active_timer', startTime.toISOString()); rezimBehu();
         }
 
         function rezimBehu() {
@@ -334,75 +199,120 @@
         }
 
         function stopPrace() {
-            vibruj();
             const endTime = new Date();
-            const popis = document.getElementById('popis').value;
-            const prodejna = document.getElementById('prodejna').value;
-            if (!popis || !prodejna) return alert("Chyba: Zadej popis a prodejnu!");
+            const popis = document.getElementById('popis').value || "Běžná činnost";
+            const prodejna = document.getElementById('prodejna').value || "Nezadáno";
+            const jeViceprace = document.getElementById('typ-prace').checked;
 
             const zaznam = {
-                datum: document.getElementById('datum-prace').value,
-                prodejna: prodejna,
-                popis: popis,
-                naklady: document.getElementById('naklady').value || 0,
-                kilometry: document.getElementById('kilometry').value || 0,
-                kategorie: "Toyota Proace City", 
-                poznamka: document.getElementById('poznamka-priste').value,
-                poloha: gpsLokace,
-                od: startTime.toLocaleTimeString('cs-CZ', {hour: '2-digit', minute:'2-digit'}),
-                do: endTime.toLocaleTimeString('cs-CZ', {hour: '2-digit', minute:'2-digit'}),
+                datum: document.getElementById('datum-prace').value, prodejna: prodejna, popis: popis,
+                typ: jeViceprace ? 'navic' : 'pausal',
                 trvani: Math.round((endTime - startTime) / 60000)
             };
 
-            posledniZaznam = { ...zaznam, start: startTime, konec: endTime }; 
-
             const db = JSON.parse(localStorage.getItem('albert_final_db') || "[]");
-            db.push(zaznam);
-            localStorage.setItem('albert_final_db', JSON.stringify(db));
+            db.push(zaznam); localStorage.setItem('albert_final_db', JSON.stringify(db));
 
-            let fronta = JSON.parse(localStorage.getItem('albert_sync_fronta') || "[]");
-            fronta.push(zaznam);
-            localStorage.setItem('albert_sync_fronta', JSON.stringify(fronta));
-            zkusOdeslatFrontu();
-
-            localStorage.removeItem('active_timer');
-            clearInterval(timerInterval);
+            localStorage.removeItem('active_timer'); clearInterval(timerInterval);
             document.getElementById('btn-start').classList.remove('hidden');
             document.getElementById('btn-stop').classList.add('hidden');
             document.getElementById('timer-ui').classList.add('hidden');
-            document.getElementById('popis').value = "";
-            
-            vypocitejStatistiky();
-            vykresliHistorii(); 
-            
-            document.getElementById('btn-kalendar').classList.remove('hidden');
-            
-            const btnStop = document.getElementById('btn-stop');
-            btnStop.innerText = "✅ DATA ULOŽENA";
-            setTimeout(() => { btnStop.innerText = "UKONČIT & ULOŽIT"; }, 2000);
+            document.getElementById('popis').value = ""; document.getElementById('typ-prace').checked = false;
+            vypocitejStatistiky(); alert(`✅ ULOŽENO: ${jeViceprace ? 'PRÁCE NAVÍC' : 'PAUŠÁL'}`);
         }
 
-        function stahnoutKalendar() {
-            if (!posledniZaznam) return;
-            vibruj();
+        function generovatReportSefovi() {
+            const db = JSON.parse(localStorage.getItem('albert_final_db') || "[]");
+            const praceNavic = db.filter(z => z.typ === 'navic');
+            if (praceNavic.length === 0) return alert("Zatím žádné práce navíc k reportování.");
+            let text = "Přehled víceprací:\n\n"; let c = 0;
+            praceNavic.forEach(z => {
+                let h = (z.trvani / 60).toFixed(1); text += `- ${z.datum} | ${z.prodejna}: ${h}h (${z.popis})\n`; c += z.trvani;
+            });
+            text += `\nCelkem navíc: ${(c / 60).toFixed(1)} h.`;
+            navigator.clipboard.writeText(text).then(() => alert("📋 Zkopírováno! Vlož do zprávy šéfovi.")).catch(e => console.log(text));
+        }
+
+        // 3. 🤖 AI GENERÁTOR VÝKAZŮ PRO ALBERT
+        // UPRAVENO: Okříšky a 025 mají limit 2h údržba a 1h technologie. Odečty jsou součástí technologie/údržby textově.
+        const CILY_PRODEJEN = {
+            "851": { udrzba: 16, tech: 8, elektro: 8, jednorazove: false },
+            "403": { udrzba: 12, tech: 4, elektro: 3, jednorazove: false },
+            "171": { udrzba: 15, tech: 4, elektro: 0, jednorazove: false },
+            "025": { udrzba: 2, tech: 1, elektro: 0, jednorazove: true },    // 3h celkem (Nepravidelně)
+            "Okříšky": { udrzba: 2, tech: 1, elektro: 0, jednorazove: true } // 3h celkem (Nepravidelně)
+        };
+
+        const DATABAZE_PRACI = {
+            udrzba: ["Oprava dilatačních spár (tmel).", "Oprava a seřízení dveří (panty).", "Čištění odpadů v zázemí.", "Oprava poškozených regálů.", "Výměna dlažby.", "Drobné údržbové práce na prodejně."],
+            tech: ["Kontrola tech. zázemí a odečty energií.", "Odečty energií (voda, plyn, el.).", "Kontrola chladicích boxů.", "Vizuální kontrola VZT."],
+            elektro: ["Kontrola vyhrazených el. zařízení.", "Dotažení zásuvek.", "Výměna osvětlení / LED panelů."]
+        };
+        const MATERIALY = ["Spoj. mat.", "Lepidlo obklad", "1x baterie", "4x pant", "Tmel", "Silikon", "Žárovky", ""];
+
+        function vygenerujA_Vytiskni() {
+            const prodejna = document.getElementById('ai-prodejna').value;
+            const cisloAN = document.getElementById('ai-cislo-an').value;
             
-            const f = (d) => d.toISOString().replace(/-|:|\.\d+/g, "");
-            const ics = [
-                "BEGIN:VCALENDAR", "VERSION:2.0", "BEGIN:VEVENT",
-                `DTSTART:${f(posledniZaznam.start)}`,
-                `DTEND:${f(posledniZaznam.konec)}`,
-                `SUMMARY:Údržba: Albert ${posledniZaznam.prodejna}`,
-                `DESCRIPTION:Provedená práce: ${posledniZaznam.popis}\\n\\nCestovné: ${posledniZaznam.kilometry} km\\nNáklady: ${posledniZaznam.naklady} Kč`,
-                "END:VEVENT", "END:VCALENDAR"
-            ].join("\n");
+            let limity = CILY_PRODEJEN[prodejna];
+            let zbyva = { ...limity };
             
-            const blob = new Blob([ics], { type: 'text/calendar;charset=utf-8' });
-            const a = document.createElement('a');
-            a.href = URL.createObjectURL(blob);
-            a.download = `Albert_${posledniZaznam.prodejna}_${posledniZaznam.datum}.ics`;
-            a.click();
+            const d = new Date(); const rok = d.getFullYear(); const mesic = d.getMonth() + 1; 
+            const pocetDni = new Date(rok, mesic, 0).getDate();
             
-            document.getElementById('btn-kalendar').classList.add('hidden');
+            let vygenerovaneDny = [];
+            
+            // Fixní den pro jednorázové návštěvy (např. 15. v měsíci)
+            let fixniDen = Math.floor(Math.random() * (pocetDni - 5)) + 2; 
+
+            while (zbyva.udrzba > 0 || zbyva.tech > 0 || zbyva.elektro > 0) {
+                let denZaznamu;
+                if (limity.jednorazove) {
+                    denZaznamu = fixniDen; // Všechny hodiny do stejného dne
+                } else {
+                    denZaznamu = Math.floor(Math.random() * pocetDni) + 1;
+                }
+
+                let denVTydnu = new Date(rok, mesic - 1, denZaznamu).getDay();
+                if (denVTydnu === 0 || denVTydnu === 6) { if(limity.jednorazove) fixniDen++; continue; }
+
+                ['udrzba', 'tech', 'elektro'].forEach(typ => {
+                    if (zbyva[typ] > 0) {
+                        // U jednorázových napřese přesně to, co zbývá (ne kouskovat)
+                        let kusHodin = limity.jednorazove ? zbyva[typ] : (Math.random() > 0.5 ? 2 : 3); 
+                        if (zbyva[typ] < kusHodin) kusHodin = zbyva[typ];
+                        
+                        zbyva[typ] -= kusHodin;
+                        let mat = Math.random() > 0.5 ? MATERIALY[Math.floor(Math.random() * MATERIALY.length)] : "";
+                        
+                        vygenerovaneDny.push({
+                            den: denZaznamu, cislo: cisloAN, 
+                            popis: DATABAZE_PRACI[typ][Math.floor(Math.random() * DATABAZE_PRACI[typ].length)],
+                            material: mat, hodiny: kusHodin
+                        });
+                    }
+                });
+            }
+
+            vygenerovaneDny.sort((a, b) => a.den - b.den); 
+
+            document.getElementById('print-prodejna').innerText = prodejna;
+            const tbody = document.getElementById('print-tbody');
+            tbody.innerHTML = "";
+
+            vygenerovaneDny.forEach(zaznam => {
+                let hodStr = zaznam.hodiny.toString().replace('.', ',') + "h";
+                tbody.innerHTML += `
+                    <tr>
+                        <td class="col-bu">${zaznam.cislo}<br><br>${zaznam.den}.${mesic}.</td>
+                        <td class="col-rm"></td>
+                        <td class="col-popis">${zaznam.popis}</td>
+                        <td class="col-mat">${zaznam.material}</td>
+                        <td class="col-hod">${hodStr}</td>
+                    </tr>`;
+            });
+
+            window.print();
         }
     </script>
 </body>
