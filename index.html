@@ -3,65 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Albert Facility PRO - Ultimate Master</title>
+    <title>Albert Facility PRO - Originál PDF</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
     <style>
         ::-webkit-scrollbar { display: none; }
         .font-digital { font-family: 'Orbitron', sans-serif; }
         .glass-panel { background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1px solid rgba(255, 255, 255, 0.08); }
         .neon-text-blue { text-shadow: 0 0 10px rgba(56, 189, 248, 0.8); }
         .neon-text-orange { text-shadow: 0 0 10px rgba(249, 115, 22, 0.8); }
-
         .toggle-checkbox:checked { right: 0; border-color: #f97316; }
         .toggle-checkbox:checked + .toggle-label { background-color: #c2410c; }
-
-        /* TISKOVÉ STYLY - PŘESNÁ KOPIE OFICIÁLNÍHO PDF VZORU */
-        @media print {
-            @page { size: A4 portrait; margin: 10mm 15mm; }
-            body { background: white !important; color: black !important; padding: 0 !important; margin: 0; font-family: "Arial", sans-serif; }
-            .no-print { display: none !important; }
-            #tiskovy-vykaz { display: block !important; width: 100%; }
-            
-            /* Hlavička - přesně jako v PDF */
-            .tsc-header { display: flex; justify-content: space-between; font-size: 9pt; margin-bottom: 20px; }
-            .header-left, .header-right { width: 35%; }
-            .header-center { width: 30%; text-align: center; }
-            .header-center h1 { font-size: 24pt; font-weight: 900; margin: 0; letter-spacing: -1px; }
-            .header-center h2 { font-size: 14pt; font-weight: bold; margin: 5px 0 0 0; text-transform: uppercase; }
-
-            /* Informace o objektu - Dva sloupce jako v PDF */
-            .info-section { display: flex; justify-content: space-between; margin-bottom: 15px; font-size: 11pt; }
-            .info-col { width: 48%; }
-            .info-row { display: flex; align-items: baseline; margin-bottom: 8px; }
-            .info-label { width: 180px; }
-            .info-value { flex-grow: 1; border-bottom: 1px dotted black; font-weight: bold; padding-left: 5px; }
-
-            /* Tabulka */
-            table { width: 100%; border-collapse: collapse; border: 2px solid black; margin-bottom: 30px; }
-            th, td { border: 1px solid black; padding: 8px; vertical-align: top; font-size: 10pt; }
-            th { text-align: center; font-weight: bold; padding: 10px 5px; }
-            
-            /* Šířky sloupců */
-            .col-an { width: 16%; font-weight: bold; text-align: center; }
-            .col-rm { width: 8%; text-align: center; }
-            .col-popis { width: 46%; }
-            .col-mat { width: 18%; }
-            .col-hod { width: 12%; text-align: center; font-weight: bold; font-size: 12pt; }
-
-            /* Patička s podpisy - přesně jako v PDF */
-            .footer { display: flex; justify-content: space-between; font-size: 11pt; margin-top: 40px; }
-            .footer-col { width: 45%; }
-            .footer-row { display: flex; align-items: flex-end; margin-bottom: 15px; height: 25px; }
-            .footer-label { width: 60px; font-weight: bold; }
-            .footer-line { flex-grow: 1; border-bottom: 1px solid black; margin-left: 10px; }
-            .stamp-area { height: 60px; border-bottom: 1px solid black; margin-top: 10px; }
-        }
     </style>
 </head>
 <body class="bg-[#050b14] text-slate-100 p-4 font-sans text-sm pb-10 min-h-screen">
 
-    <div class="max-w-md mx-auto glass-panel rounded-[2rem] shadow-2xl overflow-hidden relative no-print">
+    <div class="max-w-md mx-auto glass-panel rounded-[2rem] shadow-2xl overflow-hidden relative">
         
         <div class="bg-gradient-to-r from-blue-900/50 to-cyan-900/30 p-5 border-b border-cyan-500/20 grid grid-cols-2 gap-2 text-center">
             <div>
@@ -79,7 +37,7 @@
             <div class="bg-slate-800/30 p-4 rounded-2xl border border-slate-700/50">
                 <div class="flex justify-between items-center mb-3">
                     <h2 class="text-[9px] font-black text-cyan-400 uppercase tracking-widest">Manuální záznam</h2>
-                    <button onclick="vymazatData()" class="text-[8px] bg-red-900/50 text-red-400 px-2 py-1 rounded border border-red-500/30 hover:bg-red-800/50 transition">VYMAZAT MĚSÍC</button>
+                    <button onclick="vymazatData()" class="text-[8px] bg-red-900/50 text-red-400 px-2 py-1 rounded border border-red-500/30">VYMAZAT MĚSÍC</button>
                 </div>
                 
                 <div class="grid grid-cols-2 gap-3 mb-3">
@@ -120,14 +78,20 @@
                     <div id="clock" class="text-4xl font-digital font-black text-white neon-text-blue">00:00:00</div>
                 </div>
                 
-                <button id="btn-start" onclick="startPrace()" class="w-full bg-emerald-600 hover:bg-emerald-500 py-4 rounded-xl font-black text-sm uppercase tracking-widest active:scale-95 transition-all">START MĚŘENÍ</button>
-                <button id="btn-stop" onclick="stopPrace()" class="hidden w-full bg-red-600 hover:bg-red-500 py-4 rounded-xl font-black text-sm uppercase tracking-widest active:scale-95 transition-all">UKONČIT & ULOŽIT</button>
+                <button id="btn-start" onclick="startPrace()" class="w-full bg-emerald-600 hover:bg-emerald-500 py-4 rounded-xl font-black text-sm uppercase tracking-widest">START MĚŘENÍ</button>
+                <button id="btn-stop" onclick="stopPrace()" class="hidden w-full bg-red-600 hover:bg-red-500 py-4 rounded-xl font-black text-sm uppercase tracking-widest">UKONČIT & ULOŽIT</button>
 
                 <button onclick="generovatReportSefovi()" class="w-full text-orange-400 text-[10px] font-bold uppercase mt-4 text-center tracking-widest hover:underline">📋 Kopírovat výkaz pro Šéfa</button>
             </div>
 
             <div class="bg-amber-900/20 border border-amber-500/30 p-5 rounded-2xl relative">
-                <h2 class="text-xs font-black text-amber-500 uppercase tracking-widest mb-4">🤖 Generátor Vzoru PDF 1:1</h2>
+                <h2 class="text-xs font-black text-amber-500 uppercase tracking-widest mb-4">🖨️ Zápis do originálního PDF</h2>
+                
+                <div class="mb-4 bg-slate-900/80 border border-amber-500/30 p-3 rounded-xl">
+                    <label class="block text-[9px] font-bold text-amber-300 uppercase tracking-widest mb-2">1. Vyber prázdný PDF vzor od TSC</label>
+                    <input type="file" id="pdf-template" accept="application/pdf" class="w-full text-xs text-slate-300">
+                </div>
+
                 <div class="space-y-4">
                     <select id="ai-prodejna" class="w-full bg-slate-900 border border-amber-500/50 p-3 rounded-xl text-amber-100 outline-none text-xs font-bold">
                         <option value="171 - TŘEBÍČ">171 - Třebíč (Pátky | 19h)</option>
@@ -140,10 +104,10 @@
                         <option value="OKŘÍŠKY">Okříšky (Předposlední čt | 3h)</option>
                     </select>
 
-                    <input type="text" id="ai-cislo-an" placeholder="Zadej aktuální BÚ / číslo AH" class="w-full bg-slate-900 border border-amber-500/50 p-3 rounded-xl text-amber-100 outline-none text-xs font-bold">
+                    <input type="text" id="ai-cislo-an" placeholder="Zadej aktuální BÚ / Číslo AN" class="w-full bg-slate-900 border border-amber-500/50 p-3 rounded-xl text-amber-100 outline-none text-xs font-bold">
                     
-                    <button onclick="vygenerujA_Vytiskni()" class="w-full bg-amber-600 hover:bg-amber-500 py-4 rounded-xl font-bold uppercase tracking-widest text-xs transition-all active:scale-95">
-                        ⚙️ Vytvořit PDF k podpisu
+                    <button id="btn-vygenerovat" onclick="vygenerujA_Vytiskni()" class="w-full bg-amber-600 hover:bg-amber-500 py-4 rounded-xl font-bold uppercase tracking-widest text-xs transition-all active:scale-95">
+                        ⚙️ Zapsat a stáhnout hotové PDF
                     </button>
                 </div>
             </div>
@@ -151,70 +115,10 @@
         </div>
     </div>
 
-    <div id="tiskovy-vykaz" class="hidden">
-        
-        <div class="tsc-header">
-            <div class="header-left">
-                <strong>Sídlo:</strong><br><br>
-                TSC Facility, s.r.o.<br>
-                Stodolní 316/2<br>
-                702 00 Ostrava - Moravská Ostrava
-            </div>
-            <div class="header-center">
-                <h1>TSC Group</h1>
-                <h2>PRACOVNÍ LIST</h2>
-            </div>
-            <div class="header-right">
-                <strong>Pobočka:</strong><br><br>
-                TSC Facility, s.r.o.<br>
-                Pobřežní 620/3<br>
-                180 00 Praha 8
-            </div>
-        </div>
-
-        <div class="info-section">
-            <div class="info-col">
-                <div class="info-row"><div class="info-label">Objekt:</div><div class="info-value" id="print-objekt"></div></div>
-                <div class="info-row"><div class="info-label">Standardní doba návštěvy:</div><div class="info-value"></div></div>
-                <div class="info-row"><div class="info-label">Technik:</div><div class="info-value">BALCAR</div></div>
-            </div>
-            <div class="info-col">
-                <div class="info-row"><div class="info-label">Datum:</div><div class="info-value" id="print-datum-hlavicka"></div></div>
-                <div class="info-row"><div class="info-label">Čas příjezdu:</div><div class="info-value"></div></div>
-                <div class="info-row"><div class="info-label">Čas odjezdu:</div><div class="info-value"></div></div>
-            </div>
-        </div>
-
-        <table>
-            <thead>
-                <tr>
-                    <th class="col-an">BÚ / číslo AH</th>
-                    <th class="col-rm">RM_S<br>ANO / NE</th>
-                    <th class="col-popis">Druh a popis práce</th>
-                    <th class="col-mat">Použitý materiál</th>
-                    <th class="col-hod">Odpracované<br>hodiny</th>
-                </tr>
-            </thead>
-            <tbody id="print-tbody"></tbody>
-        </table>
-
-        <div class="footer">
-            <div class="footer-col">
-                <div style="font-weight: bold; margin-bottom: 20px;">Za poskytovatele:</div>
-                <div class="footer-row"><div class="footer-label">Jméno:</div><div class="footer-line text-center">BALCAR</div></div>
-                <div class="footer-row"><div class="footer-label">Podpis:</div><div class="footer-line"></div></div>
-            </div>
-            <div class="footer-col">
-                <div style="font-weight: bold;">Za Albert:</div>
-                <div style="margin-top: 10px;">Jméno, razítko, podpis:</div>
-                <div class="stamp-area"></div>
-            </div>
-        </div>
-    </div>
-
     <script>
         let startTime = null; let timerInterval = null;
         
+        // PRAVIDLA PRO BARÁKY
         const CILY = {
             "171 - TŘEBÍČ": { udrzba: 15, tech: 4, den: 5 }, 
             "851 - TŘEBÍČ": { udrzba: 16, tech: 16, den: 2 }, 
@@ -225,7 +129,6 @@
             "025 - BRNO": { udrzba: 2, tech: 1, den: 3, secondLast: true }, 
             "OKŘÍŠKY": { udrzba: 2, tech: 1, den: 4, secondLast: true } 
         };
-
         const POPISY = ["oprava obkladů", "čištění odpadů", "oprava dveří", "oprava skříněk", "zapravování, dotažení", "oprava poškozených regálů", "výměna baterie"];
 
         window.onload = () => {
@@ -234,7 +137,7 @@
             if (localStorage.getItem('active_timer')) { startTime = new Date(localStorage.getItem('active_timer')); rezimBehu(); }
         };
 
-        function vymazatData() { if(confirm("Opravdu smazat všechny manuální záznamy z tohoto měsíce? (Tohle nelze vrátit!)")) { localStorage.removeItem('albert_final_db'); location.reload(); } }
+        function vymazatData() { if(confirm("Opravdu smazat?")) { localStorage.removeItem('albert_final_db'); location.reload(); } }
 
         function vypocitejStatistiky() {
             const db = JSON.parse(localStorage.getItem('albert_final_db') || "[]");
@@ -262,28 +165,44 @@
             if(!pr) return alert("Vyber nejdřív lokalitu!");
             const db = JSON.parse(localStorage.getItem('albert_final_db') || "[]");
             db.push({
-                datum: document.getElementById('datum-prace').value,
-                prodejna: pr,
-                popis: document.getElementById('popis').value,
-                material: document.getElementById('material').value,
-                typ: document.getElementById('typ-prace').checked ? 'navic' : 'pausal',
+                datum: document.getElementById('datum-prace').value, prodejna: pr, popis: document.getElementById('popis').value,
+                material: document.getElementById('material').value, typ: document.getElementById('typ-prace').checked ? 'navic' : 'pausal',
                 trvani: Math.round((new Date() - startTime) / 60000)
             });
-            localStorage.setItem('albert_final_db', JSON.stringify(db));
-            location.reload();
+            localStorage.setItem('albert_final_db', JSON.stringify(db)); location.reload();
         }
 
         function generovatReportSefovi() {
-            const db = JSON.parse(localStorage.getItem('albert_final_db') || "[]");
-            let t = "Výkaz víceprací:\n";
+            const db = JSON.parse(localStorage.getItem('albert_final_db') || "[]"); let t = "Výkaz víceprací:\n";
             db.filter(z => z.typ === 'navic').forEach(z => t += `- ${z.datum} | ${z.prodejna}: ${(z.trvani/60).toFixed(1)}h (${z.popis})\n`);
-            navigator.clipboard.writeText(t).then(() => alert("Zkopírováno do schránky!"));
+            navigator.clipboard.writeText(t).then(() => alert("Zkopírováno!"));
         }
 
-        function vygenerujA_Vytiskni() {
+        // ==========================================================
+        // ⚙️ NOVÝ MOZEK PRO PŘÍMÝ ZÁPIS DO TVÉHO ORIGINÁLNÍHO PDF
+        // ==========================================================
+        async function vygenerujA_Vytiskni() {
+            const fileInput = document.getElementById('pdf-template');
+            if (!fileInput.files.length) {
+                return alert("⚠️ Nejdřív musíš pod bodem 1 nahrát ten tvůj čistý PDF vzor!");
+            }
+
             const pId = document.getElementById('ai-prodejna').value;
             const an = document.getElementById('ai-cislo-an').value;
-            if(!an) return alert("Zadej aktuální BÚ / číslo AH!");
+            if(!an) return alert("Zadej Číslo AN!");
+
+            document.getElementById('btn-vygenerovat').innerText = "⏳ Generuji PDF...";
+
+            // 1. Otevření originálního PDF
+            const file = fileInput.files[0];
+            const arrayBuffer = await file.arrayBuffer();
+            const { PDFDocument, rgb } = PDFLib;
+            const pdfDoc = await PDFDocument.load(arrayBuffer);
+            const page = pdfDoc.getPages()[0]; // Vezmeme první stranu
+
+            // Načtení fontu s podporou Češtiny (Roboto)
+            const fontBytes = await fetch('https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.66/fonts/Roboto/Roboto-Regular.ttf').then(res => res.arrayBuffer());
+            const customFont = await pdfDoc.embedFont(fontBytes);
 
             const limit = { ...CILY[pId] };
             const db = JSON.parse(localStorage.getItem('albert_final_db') || "[]");
@@ -293,6 +212,7 @@
             
             let dny = {};
             
+            // Reálná práce
             db.filter(z => z.prodejna === pId && z.datum.startsWith(prefix) && z.typ === 'pausal').forEach(z => {
                 let den = parseInt(z.datum.split('-')[2]);
                 if(!dny[den]) dny[den] = { u: 0, t: 0, p: [], m: [] };
@@ -304,65 +224,68 @@
 
             if (limit.udrzba < 0) limit.udrzba = 0;
 
+            // AI Plánování
             let dnyVhodne = [];
-            for (let i = 1; i <= pocetDni; i++) {
-                if (new Date(rok, mes-1, i).getDay() === limit.den) dnyVhodne.push(i);
-            }
-            
-            if (limit.secondLast && dnyVhodne.length >= 2) {
-                dnyVhodne = [dnyVhodne[dnyVhodne.length - 2]];
-            }
+            for (let i = 1; i <= pocetDni; i++) { if (new Date(rok, mes-1, i).getDay() === limit.den) dnyVhodne.push(i); }
+            if (limit.secondLast && dnyVhodne.length >= 2) dnyVhodne = [dnyVhodne[dnyVhodne.length - 2]];
 
             let h_u = limit.udrzba > 0 ? limit.udrzba / dnyVhodne.length : 0;
             let h_t = limit.tech > 0 ? limit.tech / dnyVhodne.length : 0;
 
             dnyVhodne.forEach(den => {
                 if(!dny[den]) dny[den] = { u: 0, t: 0, p: [], m: [] };
-                if(h_u > 0) { 
-                    dny[den].u += h_u; 
-                    dny[den].p.push(POPISY[Math.floor(Math.random()*POPISY.length)] + ", " + POPISY[Math.floor(Math.random()*POPISY.length)]); 
-                    dny[den].m.push("Spoj. mat"); 
-                }
+                if(h_u > 0) { dny[den].u += h_u; dny[den].p.push(POPISY[Math.floor(Math.random()*POPISY.length)]); dny[den].m.push("Spoj. mat"); }
                 if(h_t > 0) { dny[den].t += h_t; }
             });
 
-            // VLOŽENÍ HODNOT DO ŠABLONY
-            document.getElementById('print-objekt').innerText = pId;
-            document.getElementById('print-datum-hlavicka').innerText = `${mes} / ${rok}`;
-            const tbody = document.getElementById('print-tbody'); tbody.innerHTML = "";
+            // ----------------------------------------------------------
+            // 🗺️ SOUŘADNICE PRO TISK (Můžeš upravit, pokud to nesedí)
+            // Bod 0,0 je vlevo DOLE. Čím vyšší Y, tím výše na stránce to je.
+            // ----------------------------------------------------------
+            const cerna = rgb(0, 0, 0);
+            
+            // Hlavička (Objekt a Období)
+            page.drawText(pId, { x: 120, y: 672, size: 10, font: customFont, color: cerna });
+            page.drawText(`${mes} / ${rok}`, { x: 420, y: 672, size: 10, font: customFont, color: cerna });
 
-            let renderedRows = 0;
+            // Tabulka (Souřadnice prvního řádku a mezera mezi nimi)
+            let startY = 560; // Výška, kde začíná první řádek
+            let radekMezera = 55; // Vzdálenost mezi jednotlivými dny směrem dolů
+
+            let i = 0;
             Object.keys(dny).sort((a,b)=>a-b).forEach(den => {
                 let r = dny[den];
-                let jeOdecet = (den > 14 && den < 22) ? " + odečty energií" : "";
+                let aktualniY = startY - (i * radekMezera);
+                let jeOdecet = (den > 14 && den < 22) ? " + odečty" : "";
                 
-                let htmlT = r.t > 0 ? `<div style="border-bottom: 1px dotted black; padding-bottom: 3px; margin-bottom: 5px; font-weight:bold;">Kontrola teh<br>kon. nev. vyhr. tech. zař${jeOdecet}</div>` : '';
-                let htmlU = r.u > 0 ? `<div>${r.p.join('<br>')}</div>` : '';
+                // Sloupec 1: Číslo AN a Datum
+                page.drawText(an, { x: 40, y: aktualniY + 15, size: 10, font: customFont, color: cerna });
+                page.drawText(`${den}.${mes}.`, { x: 40, y: aktualniY, size: 11, font: customFont, color: cerna });
 
-                let matT = r.t > 0 ? `<div style="border-bottom: 1px dotted black; height: 18px; margin-bottom: 5px;"></div>` : '';
-                let matU = r.u > 0 ? `<div>${r.m.filter(x=>x).join(', ')}</div>` : '';
+                // Sloupec 3: Popis práce
+                if (r.t > 0) page.drawText(`Kontrola teh. a vyhr. zař${jeOdecet}`, { x: 180, y: aktualniY + 15, size: 9, font: customFont, color: cerna });
+                if (r.u > 0) page.drawText(r.p.join(', ').substring(0, 45), { x: 180, y: aktualniY, size: 9, font: customFont, color: cerna });
 
-                let hodT = r.t > 0 ? `<div style="border-bottom: 1px dotted black; padding-bottom: 3px; margin-bottom: 5px;">${r.t.toFixed(1).replace('.',',')}h</div>` : '';
-                let hodU = r.u > 0 ? `<div>${r.u.toFixed(1).replace('.',',')}h</div>` : '';
+                // Sloupec 4: Materiál
+                if (r.u > 0) page.drawText(r.m.filter(x=>x).join(', ').substring(0, 20), { x: 380, y: aktualniY, size: 9, font: customFont, color: cerna });
 
-                tbody.innerHTML += `
-                    <tr>
-                        <td class="col-an">${an}<br><br><span style="font-size: 14pt;">${den}.${mes}.</span></td>
-                        <td class="col-rm"></td>
-                        <td class="col-popis">${htmlT}${htmlU}</td>
-                        <td class="col-mat">${matT}${matU}</td>
-                        <td class="col-hod">${hodT}${hodU}</td>
-                    </tr>
-                `;
-                renderedRows++;
+                // Sloupec 5: Hodiny
+                if (r.t > 0) page.drawText(`${r.t.toFixed(1).replace('.',',')}h`, { x: 500, y: aktualniY + 15, size: 12, font: customFont, color: cerna });
+                if (r.u > 0) page.drawText(`${r.u.toFixed(1).replace('.',',')}h`, { x: 500, y: aktualniY, size: 12, font: customFont, color: cerna });
+
+                i++;
             });
 
-            // Doplnění prázdných řádků
-            for(let i = renderedRows; i < 5; i++) {
-                tbody.innerHTML += `<tr><td class="col-an" style="height: 35mm"></td><td class="col-rm"></td><td class="col-popis"></td><td class="col-mat"></td><td class="col-hod"></td></tr>`;
-            }
+            // 3. Uložení a Stažení hotového PDF do telefonu/PC
+            const pdfBytes = await pdfDoc.save();
+            const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `Vykaz_${pId.split(' ')[0]}_${mes}_${rok}.pdf`;
+            link.click();
 
-            window.print();
+            document.getElementById('btn-vygenerovat').innerText = "⚙️ Zapsat a stáhnout hotové PDF";
+            alert("✅ PDF se stahuje! Otevři si ho a zkontroluj.");
         }
     </script>
 </body>
