@@ -3,106 +3,276 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Albert Facility PRO - Cloud Sync</title>
+    <title>Albert Facility PRO - AI AutoPilot</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <style>::-webkit-scrollbar { display: none; }</style>
 </head>
-<body class="bg-slate-900 text-slate-100 p-4 font-sans text-sm">
+<body class="bg-slate-900 text-slate-100 p-4 font-sans text-sm pb-10">
 
     <div class="max-w-md mx-auto bg-slate-800 rounded-3xl shadow-2xl border border-slate-700 overflow-hidden">
-        <div class="p-6">
-            <h1 class="text-2xl font-bold text-blue-400 mb-6 flex items-center gap-2">
-                <span>⚡</span> Albert PRO (Cloud)
-            </h1>
-
-            <div class="space-y-4">
-                <!-- Datum a Prodejna -->
-                <div class="grid grid-cols-2 gap-2">
-                    <div>
-                        <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1 ml-1">Datum</label>
-                        <input type="date" id="datum-prace" class="w-full bg-slate-700 p-3 rounded-xl text-white outline-none focus:ring-1 focus:ring-blue-500">
-                    </div>
-                    <div>
-                        <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1 ml-1">Prodejna</label>
-                        <select id="prodejna" class="w-full bg-slate-700 p-3 rounded-xl text-white outline-none focus:ring-1 focus:ring-blue-500">
-                            <optgroup label="Třebíč">
-                                <option value="171">171 - Třebíč</option><option value="851">851 - Třebíč</option>
-                                <option value="403">403 - Třebíč</option><option value="735">735 - Třebíč</option>
-                            </optgroup>
-                            <optgroup label="Brno">
-                                <option value="025">025 - Brno</option><option value="022">022 - Brno</option><option value="026">026 - Brno</option>
-                            </optgroup>
-                            <optgroup label="Ostatní">
-                                <option value="125">125 - Rosice</option>
-                                <option value="354">354 - J. Hradec</option><option value="334">334 - J. Hradec</option>
-                            </optgroup>
-                        </select>
-                    </div>
-                </div>
-
-                <!-- Poznámka na příště -->
-                <div class="bg-yellow-500/10 border border-yellow-500/30 p-3 rounded-xl">
-                    <label class="block text-[10px] font-bold text-yellow-500 uppercase mb-1">📝 Poznámka na příště:</label>
-                    <textarea id="poznamka-priste" rows="1" class="w-full bg-transparent text-yellow-100 outline-none placeholder:text-yellow-800" placeholder="Co koupit příště..."></textarea>
-                </div>
-
-                <!-- Stopky UI -->
-                <div id="timer-ui" class="bg-slate-900/50 p-4 rounded-2xl text-center border border-slate-700 hidden">
-                    <div id="clock" class="text-3xl font-mono font-bold text-blue-400">00:00:00</div>
-                    <span class="text-[10px] text-slate-500 uppercase italic">Čas na prodejně</span>
-                </div>
-
-                <!-- Náklady a Foto -->
-                <div class="grid grid-cols-2 gap-3">
-                    <input type="number" id="naklady" placeholder="Materiál (Kč)" class="bg-slate-700 p-3 rounded-xl text-center outline-none">
-                    <label class="bg-slate-700 p-3 rounded-xl flex justify-center items-center cursor-pointer hover:bg-slate-600 transition">
-                        <span id="foto-status">📸 Účtenka</span>
-                        <input type="file" id="foto-input" accept="image/*" capture="environment" class="hidden" onchange="zpracujFoto()">
-                    </label>
-                </div>
-
-                <textarea id="popis" rows="2" class="w-full bg-slate-700 p-4 rounded-xl text-white outline-none focus:ring-2 focus:ring-blue-500" placeholder="Dnešní popis práce..."></textarea>
-
-                <!-- Tlačítka -->
-                <div class="flex gap-2">
-                    <button id="btn-start" onclick="startPrace()" class="flex-1 bg-emerald-600 p-4 rounded-xl font-bold shadow-lg hover:bg-emerald-500 active:scale-95 transition-all">START</button>
-                    <button id="btn-stop" onclick="stopPrace()" class="hidden flex-1 bg-red-600 p-4 rounded-xl font-bold shadow-lg hover:bg-red-500 active:scale-95 transition-all">STOP & SYNC</button>
-                </div>
+        
+        <!-- DASHBOARD A AUTO-SYNC STATUS -->
+        <div class="bg-blue-900/40 p-4 border-b border-blue-500/30 flex justify-between items-center relative">
+            <div id="sync-badge" class="absolute top-2 right-2 text-[9px] bg-red-500 text-white px-2 py-0.5 rounded-full hidden animate-pulse">
+                Čeká na odeslání
+            </div>
+            <div>
+                <div class="text-[10px] text-blue-300 uppercase font-bold tracking-wider">Tento měsíc</div>
+                <div class="text-xl font-bold text-white" id="stat-hodiny">0h 0m</div>
+            </div>
+            <div class="text-right">
+                <div class="text-[10px] text-emerald-300 uppercase font-bold tracking-wider">Materiál</div>
+                <div class="text-xl font-bold text-emerald-400" id="stat-naklady">0 Kč</div>
             </div>
         </div>
 
-        <!-- Historie -->
-        <div class="p-6 bg-slate-900/30 border-t border-slate-700">
-            <div class="flex justify-between items-center mb-4">
-                <h2 class="font-bold text-slate-300 italic">Poslední záznamy</h2>
-                <button onclick="exportovatCSV()" class="text-[10px] bg-blue-500/20 text-blue-400 px-3 py-1 rounded-full border border-blue-500/50">CSV EXPORT</button>
+        <div class="p-6 space-y-5">
+            <!-- Datum a Prodejna (Auto-vybíraná) -->
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Datum</label>
+                    <input type="date" id="datum-prace" class="w-full bg-slate-700 p-3 rounded-xl text-white outline-none focus:ring-1 focus:ring-blue-500">
+                </div>
+                <div>
+                    <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Prodejna <span id="auto-lokace" class="text-emerald-400 text-[9px] hidden">(Auto)</span></label>
+                    <select id="prodejna" class="w-full bg-slate-700 p-3 rounded-xl text-white outline-none focus:ring-1 focus:ring-blue-500 transition-all duration-300">
+                        <option value="">Vyber prodejnu...</option>
+                        <optgroup label="Třebíč a okolí">
+                            <option value="171">171 - Třebíč</option><option value="851">851 - Třebíč</option>
+                            <option value="403">403 - Třebíč</option><option value="735">735 - Třebíč</option>
+                            <option value="Okříšky">Okříšky</option>
+                        </optgroup>
+                        <optgroup label="Brno a okolí">
+                            <option value="025">025 - Brno</option><option value="022">022 - Brno</option>
+                            <option value="026">026 - Brno</option><option value="125">125 - Rosice</option>
+                        </optgroup>
+                        <optgroup label="Jindřichův Hradec">
+                            <option value="354">354 - J. Hradec</option><option value="334">334 - J. Hradec</option>
+                        </optgroup>
+                    </select>
+                </div>
             </div>
-            <div id="historie" class="space-y-4 max-h-80 overflow-y-auto pr-2"></div>
+
+            <!-- Cestovné a Náklady -->
+            <div class="grid grid-cols-2 gap-3">
+                <div class="bg-slate-700 p-2 rounded-xl flex items-center focus-within:ring-1 focus-within:ring-blue-500">
+                    <span class="text-xl pl-2 pr-1">🚗</span>
+                    <input type="number" id="kilometry" placeholder="KM" class="w-full bg-transparent text-white outline-none">
+                </div>
+                <div class="bg-slate-700 p-2 rounded-xl flex items-center focus-within:ring-1 focus-within:ring-emerald-500">
+                    <span class="text-xl pl-2 pr-1">💰</span>
+                    <input type="number" id="naklady" placeholder="Kč" class="w-full bg-transparent text-white outline-none">
+                </div>
+            </div>
+            
+            <label class="w-full bg-slate-700 p-3 rounded-xl flex justify-center items-center cursor-pointer hover:bg-slate-600 border border-dashed border-slate-500 transition relative overflow-hidden h-14">
+                <span id="foto-status" class="font-bold text-slate-300 z-10">📸 Vyfotit účtenku</span>
+                <img id="foto-nahled" class="absolute inset-0 w-full h-full object-cover opacity-50 hidden">
+                <input type="file" id="foto-input" accept="image/*" capture="environment" class="hidden" onchange="zpracujFoto()">
+            </label>
+
+            <!-- SMART POPIS PRÁCE (Diktování) -->
+            <div class="bg-slate-900/50 p-3 rounded-xl border border-slate-700">
+                <div class="flex justify-between items-center mb-2">
+                    <label class="block text-[10px] font-bold text-blue-400 uppercase">Provedená práce</label>
+                    <button onclick="spustitDiktovani()" id="btn-mikrofon" class="bg-blue-600 hover:bg-blue-500 text-white px-3 py-1 rounded-lg text-xs font-bold shadow-md transition flex items-center gap-1">
+                        <span>🎤</span> Diktovat
+                    </button>
+                </div>
+                
+                <textarea id="popis" rows="3" class="w-full bg-transparent border border-slate-600 p-3 rounded-lg text-white outline-none focus:border-blue-500" placeholder="Klikni na mikrofon a mluv..."></textarea>
+            </div>
+
+            <!-- Nákupní seznam (Trvalý) -->
+            <div class="bg-yellow-500/10 border border-yellow-500/30 p-3 rounded-xl">
+                <label class="block text-[10px] font-bold text-yellow-500 uppercase mb-1">🛒 Poznámka (Chybějící materiál)</label>
+                <textarea id="poznamka-priste" rows="1" oninput="ulozitNakup()" class="w-full bg-transparent text-yellow-100 outline-none placeholder:text-yellow-800" placeholder="Např. LED trubice..."></textarea>
+            </div>
+
+            <!-- Stopky a GPS Status -->
+            <div id="timer-ui" class="bg-slate-900/80 p-4 rounded-2xl text-center border border-blue-500/50 hidden shadow-[0_0_15px_rgba(59,130,246,0.2)]">
+                <div id="clock" class="text-5xl font-mono font-bold text-blue-400 tracking-wider">00:00:00</div>
+                <div id="gps-status" class="text-[10px] font-bold text-slate-400 mt-2">⏳ Zjišťuji polohu pro mapy a výběr obchodu...</div>
+            </div>
+
+            <!-- Tlačítka -->
+            <div class="flex gap-2">
+                <button id="btn-start" onclick="startPrace()" class="flex-1 bg-emerald-600 py-5 rounded-2xl font-extrabold shadow-lg hover:bg-emerald-500 active:scale-95 transition-all text-xl uppercase tracking-wider">Start</button>
+                <button id="btn-stop" onclick="stopPrace()" class="hidden flex-1 bg-red-600 py-5 rounded-2xl font-extrabold shadow-lg hover:bg-red-500 active:scale-95 transition-all text-xl uppercase tracking-wider">Stop & Sync</button>
+            </div>
         </div>
     </div>
 
     <script>
         // --- KONFIGURACE ---
         const CLOUD_URL = "https://script.google.com/macros/s/AKfycbxofi-HJn-QOuT_908ccgA74PgfrQm2ZETr4hgOsgtYFCp59KbmOAP18hQ8kjj_brqk/exec";
-        let startTime = null;
-        let timerInterval = null;
-        let b64Image = "";
-
-        // --- LOGIKA PROGRAMU ---
-
-        window.onload = () => {
-            document.getElementById('datum-prace').value = new Date().toISOString().split('T')[0];
-            const savedStart = localStorage.getItem('active_timer');
-            if (savedStart) {
-                startTime = new Date(savedStart);
-                rezimBehu();
-            }
-            vykresliHistorii();
+        
+        // 📍 SOUŘADNICE PRODEJEN PRO AUTO-VÝBĚR (Geofencing)
+        // Můžeš si tyto souřadnice v budoucnu zpřesnit podle reálné polohy.
+        const SOURADNICE_PRODEJEN = {
+            "171": { lat: 49.214, lon: 15.881 }, 
+            "851": { lat: 49.215, lon: 15.885 },
+            "403": { lat: 49.210, lon: 15.870 },
+            "Okříšky": { lat: 49.245, lon: 15.768 },
+            "125": { lat: 49.182, lon: 16.388 }, // Rosice
+            "025": { lat: 49.195, lon: 16.606 }  // Brno centrum (příklad)
         };
 
+        let startTime = null;
+        let timerInterval = null;
+        let gpsLokace = "Nezjištěna";
+        let b64Image = "";
+
+        // --- INICIALIZACE A AUTO-SYNC ---
+        window.onload = () => {
+            document.getElementById('datum-prace').value = new Date().toISOString().split('T')[0];
+            document.getElementById('poznamka-priste').value = localStorage.getItem('albert_nakup') || "";
+            vypocitejStatistiky();
+            zkusOdeslatFrontu(); // Pokusí se odeslat data z minula, pokud nebyl internet
+            
+            if (localStorage.getItem('active_timer')) {
+                startTime = new Date(localStorage.getItem('active_timer'));
+                rezimBehu();
+                najdiPolohuAObchod(); 
+            } else {
+                // Najdeme obchod ještě před startem, ať je to připravené
+                najdiPolohuAObchod();
+            }
+        };
+
+        // --- DASHBOARD A LOKÁLNÍ DATA ---
+        function vypocitejStatistiky() {
+            const db = JSON.parse(localStorage.getItem('albert_final_db') || "[]");
+            const aktualniMesic = new Date().toISOString().slice(0, 7);
+            let min = 0, kc = 0;
+            db.forEach(z => {
+                if (z.datum.startsWith(aktualniMesic)) {
+                    min += parseInt(z.trvani) || 0;
+                    kc += parseInt(z.naklady) || 0;
+                }
+            });
+            document.getElementById('stat-hodiny').innerText = `${Math.floor(min / 60)}h ${min % 60}m`;
+            document.getElementById('stat-naklady').innerText = `${kc} Kč`;
+        }
+
+        function ulozitNakup() { localStorage.setItem('albert_nakup', document.getElementById('poznamka-priste').value); }
+
+        // --- HARDWARE API ---
+        function vibruj() { if (navigator.vibrate) navigator.vibrate(100); }
+
+        function zpracujFoto() {
+            const file = document.getElementById('foto-input').files[0];
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                b64Image = reader.result;
+                document.getElementById('foto-status').innerText = "✅ Účtenka nahrána";
+                document.getElementById('foto-status').classList.add("text-emerald-400");
+                const nahled = document.getElementById('foto-nahled');
+                nahled.src = b64Image;
+                nahled.classList.remove('hidden');
+            };
+            if (file) reader.readAsDataURL(file);
+        }
+
+        function spustitDiktovani() {
+            vibruj();
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (!SpeechRecognition) return alert("Prohlížeč nepodporuje diktování.");
+            const rozpoznavani = new SpeechRecognition();
+            rozpoznavani.lang = 'cs-CZ';
+            const btn = document.getElementById('btn-mikrofon');
+            
+            rozpoznavani.onstart = () => { btn.innerHTML = '🔴 Poslouchám'; btn.classList.replace('bg-blue-600', 'bg-red-500'); };
+            rozpoznavani.onresult = (e) => {
+                const pole = document.getElementById('popis');
+                pole.value = pole.value ? pole.value + " " + e.results[0][0].transcript : e.results[0][0].transcript;
+            };
+            rozpoznavani.onend = () => { btn.innerHTML = '🎤 Diktovat'; btn.classList.replace('bg-red-500', 'bg-blue-600'); };
+            rozpoznavani.start();
+        }
+
+        // --- GEOFENCING (Matematika vzdálenosti) ---
+        function vypocitejVzdalenost(lat1, lon1, lat2, lon2) {
+            const R = 6371; // Poloměr Země v km
+            const dLat = (lat2 - lat1) * Math.PI / 180;
+            const dLon = (lon2 - lon1) * Math.PI / 180;
+            const a = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon/2) * Math.sin(dLon/2);
+            return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)); // Vzdálenost v km
+        }
+
+        function najdiPolohuAObchod() {
+            if ("geolocation" in navigator) {
+                navigator.geolocation.getCurrentPosition(
+                    p => {
+                        const lat = p.coords.latitude;
+                        const lon = p.coords.longitude;
+                        gpsLokace = `https://maps.google.com/?q=${lat},${lon}`;
+                        document.getElementById('gps-status').innerHTML = "📍 GPS spojení aktivní (Odkaz připraven)";
+                        document.getElementById('gps-status').className = "text-[10px] mt-2 font-bold text-emerald-400";
+                        
+                        // KOUZLO: Hledáme nejbližší prodejnu
+                        let nejblizsi = null;
+                        let minVzdalenost = 5; // Hledáme jen v okruhu 5 km
+
+                        for (const [id, coords] of Object.entries(SOURADNICE_PRODEJEN)) {
+                            let dist = vypocitejVzdalenost(lat, lon, coords.lat, coords.lon);
+                            if (dist < minVzdalenost) {
+                                minVzdalenost = dist;
+                                nejblizsi = id;
+                            }
+                        }
+
+                        if (nejblizsi) {
+                            const select = document.getElementById('prodejna');
+                            select.value = nejblizsi;
+                            select.classList.replace('bg-slate-700', 'bg-emerald-900/50');
+                            select.classList.replace('focus:ring-blue-500', 'focus:ring-emerald-500');
+                            document.getElementById('auto-lokace').classList.remove('hidden');
+                        }
+                    },
+                    e => { document.getElementById('gps-status').innerText = "⚠️ GPS signál blokován"; },
+                    { enableHighAccuracy: true }
+                );
+            }
+        }
+
+        // --- OFFLINE/ONLINE FRONTNÍ SYSTÉM (Auto-Sync) ---
+        async function zkusOdeslatFrontu() {
+            let fronta = JSON.parse(localStorage.getItem('albert_sync_fronta') || "[]");
+            if (fronta.length === 0) return;
+            
+            document.getElementById('sync-badge').classList.remove('hidden');
+            document.getElementById('sync-badge').innerText = `Odesílám čekající (${fronta.length})`;
+
+            let zbyvaVeFronte = [];
+            for (let zaznam of fronta) {
+                try {
+                    await fetch(CLOUD_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(zaznam) });
+                } catch (e) {
+                    zbyvaVeFronte.push(zaznam); // Pokud se nepovede, vrátí se do fronty
+                }
+            }
+            
+            localStorage.setItem('albert_sync_fronta', JSON.stringify(zbyvaVeFronte));
+            if (zbyvaVeFronte.length === 0) {
+                document.getElementById('sync-badge').classList.add('hidden');
+            }
+        }
+
+        function pridejDoFrontyAOdesli(zaznam) {
+            let fronta = JSON.parse(localStorage.getItem('albert_sync_fronta') || "[]");
+            fronta.push(zaznam);
+            localStorage.setItem('albert_sync_fronta', JSON.stringify(fronta));
+            zkusOdeslatFrontu();
+        }
+
+        // --- HLAVNÍ LOGIKA STOPEK ---
         function startPrace() {
+            vibruj();
             startTime = new Date();
             localStorage.setItem('active_timer', startTime.toISOString());
             rezimBehu();
+            najdiPolohuAObchod();
         }
 
         function rezimBehu() {
@@ -115,91 +285,47 @@
             }, 1000);
         }
 
-        function zpracujFoto() {
-            const file = document.getElementById('foto-input').files[0];
-            const reader = new FileReader();
-            reader.onloadend = () => {
-                b64Image = reader.result;
-                document.getElementById('foto-status').innerText = "✅ FOTO";
-            };
-            if (file) reader.readAsDataURL(file);
-        }
-
-        async function odeslatDoCloudu(zaznam) {
-            try {
-                // Posíláme pouze textová data, fotka by byla příliš velká pro Apps Script v tomto režimu
-                await fetch(CLOUD_URL, {
-                    method: 'POST',
-                    mode: 'no-cors',
-                    body: JSON.stringify(zaznam)
-                });
-            } catch (e) {
-                console.error("Cloud Error:", e);
-            }
-        }
-
         function stopPrace() {
+            vibruj();
             const endTime = new Date();
-            const prodejna = document.getElementById('prodejna').value;
             const popis = document.getElementById('popis').value;
-            const naklady = document.getElementById('naklady').value || 0;
-            const poznamka = document.getElementById('poznamka-priste').value;
-            const datum = document.getElementById('datum-prace').value;
-
-            if (!popis) return alert("Musíš napsat popis práce!");
+            const prodejna = document.getElementById('prodejna').value;
+            if (!popis || !prodejna) return alert("Popis práce a prodejna nesmí být prázdné!");
 
             const zaznam = {
-                datum: datum,
+                datum: document.getElementById('datum-prace').value,
                 prodejna: prodejna,
                 popis: popis,
-                naklady: naklady,
-                poznamka: poznamka,
+                naklady: document.getElementById('naklady').value || 0,
+                kilometry: document.getElementById('kilometry').value || 0,
+                kategorie: "Toyota Proace City", 
+                poznamka: document.getElementById('poznamka-priste').value,
+                poloha: gpsLokace,
                 od: startTime.toLocaleTimeString('cs-CZ', {hour: '2-digit', minute:'2-digit'}),
                 do: endTime.toLocaleTimeString('cs-CZ', {hour: '2-digit', minute:'2-digit'}),
                 trvani: Math.round((endTime - startTime) / 60000)
             };
 
-            // Uložení lokálně (včetně fotky)
+            // 1. Lokální uložení (s fotkou, fotku do Googlu neposíláme, zabírá moc místa)
             const db = JSON.parse(localStorage.getItem('albert_final_db') || "[]");
             db.push({...zaznam, foto: b64Image});
             localStorage.setItem('albert_final_db', JSON.stringify(db));
 
-            // Odeslání do Google Tabulky
-            odeslatDoCloudu(zaznam);
+            // 2. Chytré odeslání (přes frontu - zaručí odeslání i bez signálu)
+            pridejDoFrontyAOdesli(zaznam);
 
+            // 3. Úklid
             localStorage.removeItem('active_timer');
             clearInterval(timerInterval);
-            alert("Zapsáno! Data se odesílají do tabulky.");
-            location.reload(); 
-        }
-
-        function vykresliHistorii() {
-            const data = JSON.parse(localStorage.getItem('albert_final_db') || "[]").reverse();
-            document.getElementById('historie').innerHTML = data.map(z => `
-                <div class="bg-slate-700/50 p-4 rounded-2xl border-l-2 border-blue-500 text-xs">
-                    <div class="flex justify-between text-slate-500 mb-1">
-                        <span>${z.datum} | ${z.od} - ${z.do}</span>
-                        <span class="text-emerald-400 font-bold">${z.trvani} min | ${z.naklady} Kč</span>
-                    </div>
-                    <div class="font-bold text-blue-300">Albert ${z.prodejna}</div>
-                    <div class="text-slate-300 mt-1">${z.popis}</div>
-                    ${z.poznamka ? `<div class="mt-2 text-yellow-500 italic bg-yellow-500/5 p-2 rounded">📌 Příště: ${z.poznamka}</div>` : ''}
-                    ${z.foto ? `<img src="${z.foto}" class="mt-2 w-full h-24 object-cover rounded-lg border border-slate-600">` : ''}
-                </div>
-            `).join('');
-        }
-
-        function exportovatCSV() {
-            const data = JSON.parse(localStorage.getItem('albert_final_db') || "[]");
-            let csv = "\uFEFFDatum;Prodejna;Od;Do;Minut;Naklady_Kc;Prace;Poznamka_Priste\n";
-            data.forEach(z => {
-                csv += `${z.datum};${z.prodejna};${z.od};${z.do};${z.trvani};${z.naklady};${z.popis};${z.poznamka}\n`;
-            });
-            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
-            const a = document.createElement('a');
-            a.href = URL.createObjectURL(blob);
-            a.download = `Vykaz_Albert_Kamil.csv`;
-            a.click();
+            document.getElementById('btn-start').classList.remove('hidden');
+            document.getElementById('btn-stop').classList.add('hidden');
+            document.getElementById('timer-ui').classList.add('hidden');
+            document.getElementById('popis').value = "";
+            document.getElementById('foto-nahled').classList.add('hidden');
+            document.getElementById('foto-status').innerText = "📸 Vyfotit účtenku";
+            
+            vypocitejStatistiky();
+            alert("✅ Úspěšně zaznamenáno!");
         }
     </script>
 </body>
