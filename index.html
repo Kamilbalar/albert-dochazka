@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Albert Facility PRO - Kamil Master</title>
+    <title>Albert Facility PRO - TSC Replica</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&display=swap" rel="stylesheet">
     <style>
@@ -11,291 +11,208 @@
         .font-digital { font-family: 'Orbitron', sans-serif; }
         .glass-panel { background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1px solid rgba(255, 255, 255, 0.08); }
         .neon-text-blue { text-shadow: 0 0 10px rgba(56, 189, 248, 0.8); }
-        .neon-text-orange { text-shadow: 0 0 10px rgba(249, 115, 22, 0.8); }
 
-        .toggle-checkbox:checked { right: 0; border-color: #f97316; }
-        .toggle-checkbox:checked + .toggle-label { background-color: #c2410c; }
-
+        /* TISKOVÉ STYLY - PŘESNÁ KOPIE PAPÍRU */
         @media print {
-            @page { size: A4 portrait; margin: 8mm; }
-            body { background: white !important; color: black !important; padding: 0 !important; margin: 0; font-family: Arial, sans-serif; }
+            @page { size: A4 portrait; margin: 5mm; }
+            body { background: white !important; color: black !important; padding: 0 !important; margin: 0; font-family: "Arial", sans-serif; }
             .no-print { display: none !important; }
-            #tiskovy-vykaz { display: block !important; width: 100%; }
-            .tsc-header { display: flex; justify-content: space-between; border-bottom: 2px solid black; padding-bottom: 5px; margin-bottom: 10px; }
-            .tsc-title { text-align: center; font-size: 18px; font-weight: bold; background: #eee; -webkit-print-color-adjust: exact; padding: 4px; margin-bottom: 10px; border: 1px solid black;}
-            .tsc-info { display: flex; justify-content: space-between; margin-bottom: 8px; font-weight: bold; font-size: 13px; }
-            table { width: 100%; border-collapse: collapse; margin-bottom: 15px; table-layout: fixed; }
-            th, td { border: 1px solid black; padding: 6px; text-align: left; vertical-align: top; font-size: 11px; line-height: 1.2; }
-            th { text-align: center; font-size: 10px; background-color: #f3f4f6 !important; }
-            .col-bu { width: 15%; font-weight: bold; }
-            .col-rm { width: 6%; text-align: center; }
-            .col-popis { width: 50%; }
-            .col-mat { width: 19%; }
-            .col-hod { width: 10%; text-align: center; font-weight: bold; font-size: 14px; }
-            .signature-box { display: flex; justify-content: space-between; margin-top: 30px; }
-            .sig-line { border-top: 1px solid black; width: 220px; text-align: center; padding-top: 4px; font-size: 10px; font-weight: bold; }
+            #tiskovy-vykaz { display: block !important; width: 100%; padding: 10mm; box-sizing: border-box; }
+            
+            /* Horní lišta se sídly */
+            .tsc-header { display: flex; justify-content: space-between; font-size: 8pt; line-height: 1.1; margin-bottom: 5mm; }
+            .tsc-logo { text-align: center; font-size: 22pt; font-weight: 900; letter-spacing: -1px; display: flex; align-items: center; justify-content: center; }
+            .tsc-logo span { border: 2px solid black; border-radius: 50%; width: 30px; height: 30px; display: inline-flex; align-items: center; justify-content: center; margin-right: 5px; font-size: 16pt; }
+
+            /* Ten stínovaný pruh */
+            .tsc-black-bar { 
+                background: #444 !important; 
+                color: white !important; 
+                text-align: center; 
+                font-weight: bold; 
+                font-size: 12pt; 
+                padding: 4px; 
+                letter-spacing: 3px; 
+                -webkit-print-color-adjust: exact;
+                margin-bottom: 5mm;
+                border: 1px solid black;
+            }
+
+            /* Info sekce pod pruhem */
+            .info-grid { display: grid; grid-template-cols: 1fr 1fr; gap: 10px; margin-bottom: 5mm; font-size: 11pt; font-weight: bold; }
+            .info-line { border-bottom: 1px solid black; min-width: 150px; display: inline-block; padding: 0 10px; }
+
+            /* Tabulka */
+            table { width: 100%; border-collapse: collapse; border: 2pt solid black; }
+            th, td { border: 1pt solid black; padding: 6px; vertical-align: top; font-size: 10pt; line-height: 1.3; }
+            th { text-align: center; font-size: 8pt; font-weight: bold; background: #eee !important; -webkit-print-color-adjust: exact; }
+            
+            .col-an { width: 18%; font-weight: bold; }
+            .col-rm { width: 8%; text-align: center; }
+            .col-popis { width: 44%; }
+            .col-mat { width: 18%; }
+            .col-hod { width: 12%; text-align: center; font-weight: bold; font-size: 12pt; }
+
+            /* Patička s razítkem */
+            .footer-grid { display: grid; grid-template-cols: 1.2fr 1fr; gap: 20px; margin-top: 10mm; }
+            .stamp-box { border: 2pt solid black; height: 35mm; position: relative; padding: 5px; }
+            .stamp-label { background: #eee !important; -webkit-print-color-adjust: exact; font-weight: bold; font-size: 9pt; padding: 2px 10px; position: absolute; top: 0; left: 0; width: 100%; border-bottom: 1pt solid black; }
+            .sig-area { margin-top: 15mm; border-top: 1pt solid black; text-align: center; font-size: 9pt; font-weight: bold; }
         }
     </style>
 </head>
 <body class="bg-[#050b14] text-slate-100 p-4 font-sans text-sm pb-10 min-h-screen">
 
     <div class="max-w-md mx-auto glass-panel rounded-[2rem] shadow-2xl overflow-hidden relative no-print">
-        
-        <div class="bg-gradient-to-r from-blue-900/50 to-cyan-900/30 p-5 border-b border-cyan-500/20 grid grid-cols-2 gap-2 text-center">
-            <div>
-                <div class="text-[8px] text-cyan-400 uppercase font-black tracking-widest mb-1 opacity-80">Reálný Paušál</div>
-                <div class="text-xl font-digital font-bold text-white neon-text-blue" id="stat-hodiny">0h 0m</div>
-            </div>
-            <div class="border-l border-cyan-500/30 pl-2">
-                <div class="text-[8px] text-orange-400 uppercase font-black tracking-widest mb-1 opacity-80">Práce Navíc (Šéf)</div>
-                <div class="text-xl font-digital font-bold text-orange-400 neon-text-orange" id="stat-navic">0h 0m</div>
-            </div>
+        <div class="bg-gradient-to-r from-blue-900/50 to-cyan-900/30 p-5 border-b border-cyan-500/20 text-center">
+            <h1 class="text-xl font-digital font-bold text-white neon-text-blue">ALBERT FACILITY PRO</h1>
         </div>
 
         <div class="p-6 space-y-6">
-            
-            <div class="bg-slate-800/30 p-4 rounded-2xl border border-slate-700/50">
-                <div class="flex justify-between items-center mb-3">
-                    <h2 class="text-[9px] font-black text-cyan-400 uppercase tracking-widest">Manuální záznam</h2>
-                    <button onclick="vymazatData()" class="text-[8px] bg-red-900/50 text-red-400 px-2 py-1 rounded border border-red-500/30 hover:bg-red-800/50 transition">VYMAZAT MĚSÍC</button>
-                </div>
-                
-                <div class="grid grid-cols-2 gap-3 mb-3">
-                    <input type="date" id="datum-prace" class="w-full bg-slate-900/80 border border-slate-600/50 p-3 rounded-xl text-cyan-100 outline-none text-xs">
-                    <select id="prodejna" class="w-full bg-slate-900/80 border border-slate-600/50 p-3 rounded-xl text-cyan-100 outline-none text-xs">
-                        <option value="">Lokalita...</option>
-                        <option value="171">171 - Třebíč</option><option value="851">851 - Třebíč</option><option value="403">403 - Třebíč</option><option value="Okříšky">Okříšky</option>
-                        <option value="025">025 - Brno</option><option value="022">022 - Brno</option><option value="026">026 - Brno</option><option value="125">125 - Rosice</option>
-                        <option value="354">354 - J. Hradec</option>
+            <div class="bg-amber-900/20 border border-amber-500/30 p-5 rounded-2xl">
+                <h2 class="text-xs font-black text-amber-500 uppercase tracking-widest mb-4">🤖 Generátor Přesné Kopie</h2>
+                <div class="space-y-4">
+                    <select id="ai-prodejna" class="w-full bg-slate-900 border border-amber-500/50 p-3 rounded-xl text-amber-100 outline-none text-xs font-bold">
+                        <option value="171 - TŘEBÍČ">171 - Třebíč</option>
+                        <option value="851 - TŘEBÍČ">851 - Třebíč</option>
+                        <option value="403 - TŘEBÍČ">403 - Třebíč</option>
+                        <option value="025 - BRNO">025 - Brno</option>
+                        <option value="022 - BRNO">022 - Brno</option>
+                        <option value="026 - BRNO">026 - Brno</option>
+                        <option value="125 - ROSICE">125 - Rosice</option>
+                        <option value="OKŘÍŠKY">Okříšky</option>
                     </select>
-                </div>
-
-                <div class="bg-slate-900/50 border border-slate-600/50 p-3 rounded-xl flex justify-between items-center mb-3">
-                    <div class="text-[9px] font-bold text-orange-400 uppercase tracking-widest">Práce MIMO paušál (Šéf)</div>
-                    <div class="relative inline-block w-10 h-5 align-middle select-none">
-                        <input type="checkbox" id="typ-prace" class="toggle-checkbox absolute block w-5 h-5 rounded-full bg-white border-4 border-slate-700 appearance-none cursor-pointer transition-all duration-300"/>
-                        <label for="typ-prace" class="toggle-label block overflow-hidden h-5 rounded-full bg-slate-700 cursor-pointer"></label>
-                    </div>
-                </div>
-
-                <div class="relative mb-2">
-                    <textarea id="popis" rows="2" class="w-full bg-slate-900/80 border border-slate-600/50 p-3 pr-10 rounded-xl text-cyan-50 outline-none text-xs" placeholder="Popis práce (nadiktuj)..."></textarea>
-                    <button onclick="spustitDiktovani('popis')" class="absolute top-2 right-2 text-lg">🎙️</button>
-                </div>
-
-                <div class="relative mb-4">
-                    <input id="material" type="text" class="w-full bg-slate-900/80 border border-slate-600/50 p-3 pr-10 rounded-xl text-emerald-100 outline-none text-xs" placeholder="Materiál z účtenky (nadiktuj)...">
-                    <button onclick="spustitDiktovani('material')" class="absolute top-3 right-2 text-lg">🎙️</button>
-                </div>
-
-                <div id="timer-ui" class="bg-[#020617] p-4 rounded-xl text-center border border-cyan-500/30 hidden mb-4">
-                    <div id="clock" class="text-4xl font-digital font-black text-white neon-text-blue">00:00:00</div>
-                </div>
-                
-                <button id="btn-start" onclick="startPrace()" class="w-full bg-emerald-600 hover:bg-emerald-500 py-4 rounded-xl font-black text-sm uppercase tracking-widest active:scale-95 transition-all">START MĚŘENÍ</button>
-                <button id="btn-stop" onclick="stopPrace()" class="hidden w-full bg-red-600 hover:bg-red-500 py-4 rounded-xl font-black text-sm uppercase tracking-widest active:scale-95 transition-all">UKONČIT & ULOŽIT</button>
-
-                <button onclick="generovatReportSefovi()" class="w-full text-orange-400 text-[10px] font-bold uppercase mt-4 text-center tracking-widest hover:underline">📋 Kopírovat výkaz pro Šéfa</button>
-            </div>
-
-            <div class="bg-amber-900/20 border border-amber-500/30 p-5 rounded-2xl relative">
-                <h2 class="text-xs font-black text-amber-500 uppercase tracking-widest mb-4">🤖 AI Automat pro Albert</h2>
-                <div class="space-y-3">
-                    <select id="ai-prodejna" class="w-full bg-slate-900/80 border border-amber-500/50 p-3 rounded-xl text-amber-100 outline-none text-xs font-bold">
-                        <option value="851">851 - Třebíč (ÚTERKY | 32h)</option>
-                        <option value="403">403 - Třebíč (ČTVRTKY | 19h)</option>
-                        <option value="171">171 - Třebíč (PÁTKY | 19h)</option>
-                        <option value="022">022 - Brno (STŘEDY | ~14h)</option>
-                        <option value="026">026 - Brno (STŘEDY | ~14h)</option>
-                        <option value="125">125 - Rosice (STŘEDY | ~14h)</option>
-                        <option value="025">025 - Brno (Předposlední STŘEDA | 3h)</option>
-                        <option value="Okříšky">Okříšky (Předposlední ČTVRTEK | 3h)</option>
-                    </select>
-
-                    <input type="text" id="ai-cislo-an" placeholder="Zadej BÚ / Číslo AN (např. AP2608544)" class="w-full bg-slate-900/80 border border-amber-500/50 p-3 rounded-xl text-amber-100 outline-none font-bold text-xs" title="Číslo AN">
-                    
-                    <button onclick="vygenerujA_Vytiskni()" class="w-full bg-amber-600 hover:bg-amber-500 py-4 rounded-xl font-bold uppercase tracking-widest shadow-xl text-xs active:scale-95 transition-all">
-                        ⚙️ Sestavit PDF k podpisu
+                    <input type="text" id="ai-cislo-an" placeholder="Zadej aktuální BÚ / Číslo AN" class="w-full bg-slate-900 border border-amber-500/50 p-3 rounded-xl text-amber-100 outline-none text-xs font-bold">
+                    <button onclick="vygenerujA_Vytiskni()" class="w-full bg-amber-600 py-4 rounded-xl font-bold uppercase tracking-widest text-xs transition-all active:scale-95">
+                        ⚙️ Vytvořit PDF Kopii
                     </button>
                 </div>
             </div>
-
         </div>
     </div>
 
     <div id="tiskovy-vykaz" class="hidden">
         <div class="tsc-header">
-            <div><strong>Sídlo:</strong> TSC Facility, s.r.o., Stodolní 316/2, 702 00 Ostrava</div>
-            <div style="font-size: 20px; font-weight: 900;">TSC Group</div>
-            <div><strong>Pobočka:</strong> Pobřežní 620/3, 180 00 Praha 8</div>
+            <div>
+                <strong>Sídlo:</strong><br>
+                TSC Facility, s.r.o.<br>
+                Stodolní 316/2<br>
+                702 00 Ostrava - Moravská Ostrava
+            </div>
+            <div class="tsc-logo">
+                <span>T</span> TSC Group
+            </div>
+            <div style="text-align: right;">
+                <strong>Pobočka:</strong><br>
+                TSC Facility, s.r.o.<br>
+                Pobřežní 620/3<br>
+                180 00 Praha 8
+            </div>
         </div>
-        <div class="tsc-title">PRACOVNÍ LIST - DOMOVNÍ TECHNIK</div>
-        <div class="tsc-info">
-            <div>Zákazník: <span id="print-prodejna" style="border-bottom: 1px solid black; padding: 0 15px;">---</span></div>
-            <div>Období: <span id="print-datum" style="border-bottom: 1px solid black; padding: 0 15px;">---</span></div>
-            <div>Technik: <span style="border-bottom: 1px solid black; padding: 0 15px;">BALCAR</span></div>
+
+        <div class="tsc-black-bar">PRACOVNÍ LIST</div>
+
+        <div class="info-grid">
+            <div>Objekt: <span class="info-line" id="print-objekt"></span></div>
+            <div style="text-align: right;">Datum: <span class="info-line" id="print-datum-hlavicka"></span></div>
+            <div>Technik: <span class="info-line">BALCAR</span></div>
         </div>
+
         <table>
             <thead>
                 <tr>
-                    <th class="col-bu">BÚ / Datum / AN</th>
-                    <th class="col-rm">RM_S</th>
-                    <th class="col-popis">Druh a popis provedené práce</th>
+                    <th class="col-an">BÚ / Číslo AN</th>
+                    <th class="col-rm">RM_S<br>ANO / NE</th>
+                    <th class="col-popis">Druh a popis práce</th>
                     <th class="col-mat">Použitý materiál</th>
-                    <th class="col-hod">Hodiny</th>
+                    <th class="col-hod">Odpracované<br>hodiny</th>
                 </tr>
             </thead>
             <tbody id="print-tbody"></tbody>
         </table>
-        <div class="signature-box">
-            <div><div class="sig-line">Technik (BALCAR)</div></div>
-            <div><div class="sig-line">Albert - Razítko a Podpis Manažera</div></div>
+
+        <div class="footer-grid">
+            <div>
+                <p style="font-size: 8pt; font-weight: bold; margin-bottom: 20px;">Za poskytovatele:</p>
+                <div class="sig-area" style="width: 70%;">Jméno: BALCAR</div>
+                <div class="sig-area" style="width: 70%; margin-top: 10px;">Podpis:</div>
+            </div>
+            <div>
+                <div class="stamp-box">
+                    <div class="stamp-label">Za Albert:</div>
+                    <div style="position: absolute; bottom: 5px; width: 100%; text-align: center; font-size: 7pt; font-weight: bold; color: #888;">
+                        Jméno, razítko, podpis:
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
     <script>
-        let startTime = null; let timerInterval = null;
-        
-        // ZLATÝ DŮL: Napojení tvých reálných hodin a harmonogramu (bez AN čísel)
         const CILY = {
-            "851": { udrzba: 16, tech: 16, den: 2, weekly: true },
-            "403": { udrzba: 12, tech: 7, den: 4, weekly: true },
-            "171": { udrzba: 15, tech: 4, den: 5, weekly: true },
-            "022": { udrzba: 8, tech: 6, den: 3, weekly: true }, 
-            "026": { udrzba: 8, tech: 6, den: 3, weekly: true },
-            "125": { udrzba: 8, tech: 6, den: 3, weekly: true },
-            "025": { udrzba: 2, tech: 1, den: 3, secondLast: true }, // Jednorázovka předposlední středa
-            "Okříšky": { udrzba: 2, tech: 1, den: 4, secondLast: true } // Jednorázovka předposlední čtvrtek
+            "851 - TŘEBÍČ": { udrzba: 16, tech: 16, den: 2 },
+            "403 - TŘEBÍČ": { udrzba: 12, tech: 7, den: 4 },
+            "171 - TŘEBÍČ": { udrzba: 15, tech: 4, den: 5 },
+            "022 - BRNO": { udrzba: 8, tech: 6, den: 3 },
+            "025 - BRNO": { udrzba: 2, tech: 1, den: 3, single: true },
+            "125 - ROSICE": { udrzba: 8, tech: 6, den: 3 }
         };
 
-        // Přesný slovník z tvých fotek
-        const POPISY = ["oprava obkladů", "čištění odpadů", "oprava dveří", "oprava skříněk", "zapravování, dotažení", "oprava zástěn", "oprava poškozených regálů"];
-        const MATS = ["Spoj. mat", "Lepidlo/silikon", "1x vodo. bat", "sprej", "panty", ""];
+        const POPISY = ["oprava obkladů", "čištění odpadů", "oprava dveří", "oprava skříněk", "zapravování, dotažení", "oprava poškozených regálů", "výměna vodo baterie"];
 
-        window.onload = () => {
-            document.getElementById('datum-prace').value = new Date().toISOString().split('T')[0];
-            const d = new Date();
-            document.getElementById('print-datum').innerText = `${d.getMonth()+1} / ${d.getFullYear()}`;
-            vypocitejStatistiky();
-            if (localStorage.getItem('active_timer')) { startTime = new Date(localStorage.getItem('active_timer')); rezimBehu(); }
-        };
-
-        function vymazatData() { if(confirm("Opravdu smazat všechny manuální záznamy z tohoto měsíce? (Tohle nelze vrátit!)")) { localStorage.removeItem('albert_final_db'); location.reload(); } }
-
-        function vypocitejStatistiky() {
-            const db = JSON.parse(localStorage.getItem('albert_final_db') || "[]");
-            const m = new Date().toISOString().slice(0, 7);
-            let p = 0, n = 0;
-            db.forEach(z => { if(z.datum.startsWith(m)) { if(z.typ==='navic') n += z.trvani; else p += z.trvani; } });
-            document.getElementById('stat-hodiny').innerText = `${Math.floor(p/60)}h ${p%60}m`;
-            document.getElementById('stat-navic').innerText = `${Math.floor(n/60)}h ${n%60}m`;
-        }
-
-        function spustitDiktovani(id) {
-            const sr = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-            sr.lang = 'cs-CZ'; sr.onresult = (e) => { document.getElementById(id).value += (document.getElementById(id).value ? " " : "") + e.results[0][0].transcript; };
-            sr.start();
-        }
-
-        function startPrace() { startTime = new Date(); localStorage.setItem('active_timer', startTime.toISOString()); rezimBehu(); }
-        function rezimBehu() {
-            document.getElementById('btn-start').classList.add('hidden'); document.getElementById('btn-stop').classList.remove('hidden'); document.getElementById('timer-ui').classList.remove('hidden');
-            timerInterval = setInterval(() => { document.getElementById('clock').innerText = new Date(new Date() - startTime).toISOString().substr(11, 8); }, 1000);
-        }
-
-        function stopPrace() {
-            const db = JSON.parse(localStorage.getItem('albert_final_db') || "[]");
-            db.push({
-                datum: document.getElementById('datum-prace').value,
-                prodejna: document.getElementById('prodejna').value,
-                popis: document.getElementById('popis').value,
-                material: document.getElementById('material').value,
-                typ: document.getElementById('typ-prace').checked ? 'navic' : 'pausal',
-                trvani: Math.round((new Date() - startTime) / 60000)
-            });
-            localStorage.setItem('albert_final_db', JSON.stringify(db));
-            location.reload();
-        }
-
-        function generovatReportSefovi() {
-            const db = JSON.parse(localStorage.getItem('albert_final_db') || "[]");
-            let t = "Výkaz víceprací:\n";
-            db.filter(z => z.typ === 'navic').forEach(z => t += `- ${z.datum} | ${z.prodejna}: ${(z.trvani/60).toFixed(1)}h (${z.popis})\n`);
-            navigator.clipboard.writeText(t).then(() => alert("Zkopírováno do schránky!"));
-        }
-
-        // AI HYBRIDNÍ GENERÁTOR PRO ALBERT
         function vygenerujA_Vytiskni() {
             const pId = document.getElementById('ai-prodejna').value;
-            const cisloAN = document.getElementById('ai-cislo-an').value; // Dynamické načtení zadaného AN z pole
-            
-            if (!cisloAN) return alert("Prosím, vyplň aktuální Číslo AN pro tento měsíc!");
+            const an = document.getElementById('ai-cislo-an').value;
+            if(!an) return alert("Zadej Číslo AN!");
 
-            const limit = { ...CILY[pId] };
-            const db = JSON.parse(localStorage.getItem('albert_final_db') || "[]");
+            const limit = CILY[pId] || { udrzba: 15, tech: 4, den: 1 };
             const d = new Date(); const rok = d.getFullYear(); const mes = d.getMonth() + 1;
-            const prefix = `${rok}-${String(mes).padStart(2, '0')}`;
             const pocetDni = new Date(rok, mes, 0).getDate();
             
-            let dny = {};
-            // 1. Přidání reálné práce z mobilu
-            db.filter(z => z.prodejna === pId && z.datum.startsWith(prefix) && z.typ === 'pausal').forEach(z => {
-                let den = parseInt(z.datum.split('-')[2]);
-                if(!dny[den]) dny[den] = { u: 0, t: 0, p: [], m: [] };
-                dny[den].u += (z.trvani / 60); dny[den].p.push(z.popis); dny[den].m.push(z.material);
-                limit.udrzba -= (z.trvani / 60);
-            });
-
-            // 2. AI Doplánování
+            document.getElementById('print-objekt').innerText = pId;
+            document.getElementById('print-datum-hlavicka').innerText = `${mes} / ${rok}`;
+            
             let dnyVhodne = [];
             for (let i = 1; i <= pocetDni; i++) {
                 if (new Date(rok, mes-1, i).getDay() === limit.den) dnyVhodne.push(i);
             }
-            
-            // Logika pro Okříšky a 025 - předposlední v měsíci
-            if (limit.secondLast && dnyVhodne.length >= 2) {
-                dnyVhodne = [dnyVhodne[dnyVhodne.length - 2]];
+            if(limit.single) dnyVhodne = [dnyVhodne[dnyVhodne.length-2]];
+
+            let h_u = limit.udrzba / dnyVhodne.length;
+            let h_t = limit.tech / dnyVhodne.length;
+
+            const tbody = document.getElementById('print-tbody'); tbody.innerHTML = "";
+            dnyVhodne.forEach(den => {
+                let jeOdecet = (den > 14 && den < 22) ? " + odečty energií" : "";
+                tbody.innerHTML += `
+                    <tr>
+                        <td class="col-an">${an}<br><br><span style="font-size: 14pt;">${den}.${mes}.</span></td>
+                        <td class="col-rm"></td>
+                        <td class="col-popis">
+                            <div style="border-bottom: 1px dotted black; padding-bottom: 3px; margin-bottom: 5px;">
+                                Kontrola teh<br>kon. nev. vyhr. tech. zař${jeOdecet}
+                            </div>
+                            <div>
+                                ${POPISY[Math.floor(Math.random()*POPISY.length)]}, ${POPISY[Math.floor(Math.random()*POPISY.length)]}
+                            </div>
+                        </td>
+                        <td class="col-mat">
+                            <div style="border-bottom: 1px dotted black; height: 18px; margin-bottom: 5px;"></div>
+                            <div>Spoj. mat</div>
+                        </td>
+                        <td class="col-hod">
+                            <div style="border-bottom: 1px dotted black; padding-bottom: 3px; margin-bottom: 5px;">${h_t.toFixed(1).replace('.',',')}h</div>
+                            <div>${h_u.toFixed(1).replace('.',',')}h</div>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            // Vyplnění prázdných řádků pro vzhled (jako na fotce)
+            for(let i = dnyVhodne.length; i < 5; i++) {
+                tbody.innerHTML += `<tr><td class="col-an" style="height: 35mm"></td><td class="col-rm"></td><td class="col-popis"></td><td class="col-mat"></td><td class="col-hod"></td></tr>`;
             }
 
-            let h_u = limit.udrzba > 0 ? limit.udrzba / dnyVhodne.length : 0;
-            let h_t = limit.tech > 0 ? limit.tech / dnyVhodne.length : 0;
-
-            dnyVhodne.forEach(den => {
-                if(!dny[den]) dny[den] = { u: 0, t: 0, p: [], m: [] };
-                if(h_u > 0) { 
-                    dny[den].u += h_u; 
-                    dny[den].p.push(POPISY[Math.floor(Math.random()*POPISY.length)] + ", " + POPISY[Math.floor(Math.random()*POPISY.length)]); 
-                    dny[den].m.push(MATS[Math.floor(Math.random()*MATS.length)]); 
-                }
-                if(h_t > 0) { dny[den].t += h_t; }
-            });
-
-            // 3. Vykreslení do PDF Tabulky
-            document.getElementById('print-prodejna').innerText = pId;
-            const tbody = document.getElementById('print-tbody'); tbody.innerHTML = "";
-            
-            Object.keys(dny).sort((a,b)=>a-b).forEach(den => {
-                let r = dny[den];
-                let jeOdecet = (den > 14 && den < 22) ? " + odečty" : ""; // 3. týden
-                
-                let row = `<tr>
-                    <td class="col-bu">${cisloAN}<br><br>${den}.${mes}.</td>
-                    <td class="col-rm"></td>
-                    <td class="col-popis">
-                        ${r.t > 0 ? `<div style="border-bottom:1px dotted #000; padding-bottom:3px; margin-bottom:5px;"><b>Kontrola teh<br>kon. nev. vyhr. tech. zař${jeOdecet}</b></div>` : ''}
-                        ${r.u > 0 ? `<div>${r.p.join(', ')}</div>` : ''}
-                    </td>
-                    <td class="col-mat">
-                        ${r.t > 0 ? `<div style="border-bottom:1px dotted #000; padding-bottom:3px; margin-bottom:5px; height:25px;"></div>` : ''}
-                        ${r.u > 0 ? `<div>${r.m.filter(x=>x).join(', ')}</div>` : ''}
-                    </td>
-                    <td class="col-hod">
-                        ${r.t > 0 ? `<div style="border-bottom:1px dotted #000; padding-bottom:3px; margin-bottom:5px;">${r.t.toFixed(1).replace('.',',')}h</div>` : ''}
-                        ${r.u > 0 ? `<div>${r.u.toFixed(1).replace('.',',')}h</div>` : ''}
-                    </td>
-                </tr>`;
-                tbody.innerHTML += row;
-            });
             window.print();
         }
     </script>
