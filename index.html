@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Albert Facility PRO - Dokonalý Tisk</title>
+    <title>Albert Facility PRO - Viditelný Deník</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
@@ -13,8 +13,6 @@
         .font-digital { font-family: 'Orbitron', sans-serif; }
         .glass-panel { background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1px solid rgba(255, 255, 255, 0.08); }
         .neon-text-blue { text-shadow: 0 0 10px rgba(56, 189, 248, 0.8); }
-        .toggle-checkbox:checked { right: 0; border-color: #f97316; }
-        .toggle-checkbox:checked + .toggle-label { background-color: #c2410c; }
     </style>
 </head>
 <body class="bg-[#050b14] text-slate-100 p-4 font-sans text-sm pb-10 min-h-screen">
@@ -26,7 +24,7 @@
                 <div class="text-[9px] text-cyan-400 uppercase font-black tracking-widest mb-1 opacity-80">Tvůj deník (Odpracováno)</div>
                 <div class="text-2xl font-digital font-bold text-white neon-text-blue" id="stat-hodiny">0h 0m</div>
             </div>
-            <button onclick="vymazatData()" class="text-[8px] bg-red-900/50 text-red-400 px-3 py-2 rounded-xl border border-red-500/30 uppercase font-bold active:scale-95 transition-all">Vymazat<br>Deník</button>
+            <button onclick="vymazatCelyDenik()" class="text-[8px] bg-red-900/50 text-red-400 px-3 py-2 rounded-xl border border-red-500/30 uppercase font-bold active:scale-95 transition-all">Vymazat<br>Vše</button>
         </div>
 
         <div class="p-6 space-y-6">
@@ -44,14 +42,6 @@
                     </select>
                 </div>
 
-                <div class="bg-slate-900/50 border border-slate-600/50 p-3 rounded-xl flex justify-between items-center mb-3">
-                    <div class="text-[9px] font-bold text-orange-400 uppercase tracking-widest">Práce MIMO paušál (Šéf)</div>
-                    <div class="relative inline-block w-10 h-5 align-middle select-none">
-                        <input type="checkbox" id="typ-prace" class="toggle-checkbox absolute block w-5 h-5 rounded-full bg-white border-4 border-slate-700 appearance-none cursor-pointer transition-all duration-300"/>
-                        <label for="typ-prace" class="toggle-label block overflow-hidden h-5 rounded-full bg-slate-700 cursor-pointer"></label>
-                    </div>
-                </div>
-
                 <div class="relative mb-2">
                     <textarea id="popis" rows="2" class="w-full bg-slate-900/80 border border-slate-600/50 p-3 pr-10 rounded-xl text-cyan-50 outline-none text-xs" placeholder="Popis práce (nadiktuj)..."></textarea>
                     <button onclick="spustitDiktovani('popis')" class="absolute top-2 right-2 text-lg">🎙️</button>
@@ -66,12 +56,22 @@
                     <div id="clock" class="text-4xl font-digital font-black text-white neon-text-blue">00:00:00</div>
                 </div>
                 
-                <button id="btn-start" onclick="startPrace()" class="w-full bg-emerald-600 hover:bg-emerald-500 py-4 rounded-xl font-black text-sm uppercase tracking-widest active:scale-95 transition-all">START STOPKY</button>
-                <button id="btn-stop" onclick="stopPrace()" class="hidden w-full bg-red-600 hover:bg-red-500 py-4 rounded-xl font-black text-sm uppercase tracking-widest active:scale-95 transition-all">UKONČIT & ULOŽIT</button>
+                <button id="btn-start" onclick="startPrace()" class="w-full bg-emerald-600 hover:bg-emerald-500 py-4 rounded-xl font-black text-sm uppercase tracking-widest active:scale-95 transition-all shadow-lg">START STOPKY</button>
+                
+                <div id="stop-controls" class="hidden space-y-2">
+                    <button onclick="stopPrace()" class="w-full bg-red-600 hover:bg-red-500 py-4 rounded-xl font-black text-sm uppercase tracking-widest active:scale-95 transition-all shadow-lg">UKONČIT & ULOŽIT</button>
+                    <button onclick="ulozRucne()" class="w-full bg-slate-700 hover:bg-slate-600 py-3 rounded-xl font-bold text-xs uppercase tracking-widest text-slate-300">Zapsat čas ručně (Zastaví stopky)</button>
+                </div>
 
-                <button onclick="generovatReportSefovi()" class="w-full text-cyan-400 text-[10px] font-bold uppercase mt-4 text-center tracking-widest hover:underline bg-slate-900/50 p-3 rounded-xl border border-cyan-900/50">
-                    📋 Zkopírovat report pro Šéfa
-                </button>
+                <div class="mt-6 border-t border-slate-700/50 pt-4">
+                    <h3 class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 flex justify-between items-center">
+                        <span>📝 Tvé záznamy</span>
+                        <button onclick="generovatReportSefovi()" class="text-cyan-400 hover:underline">📋 Kopírovat</button>
+                    </h3>
+                    
+                    <div id="seznam-zaznamu" class="space-y-2 max-h-48 overflow-y-auto pr-1">
+                        </div>
+                </div>
             </div>
 
             <div class="bg-amber-900/20 border border-amber-500/30 p-5 rounded-2xl relative">
@@ -83,8 +83,8 @@
                 </div>
 
                 <div id="pdf-ready-box" class="mb-4 bg-emerald-900/40 border border-emerald-500/50 p-3 rounded-xl hidden text-center">
-                    <span class="text-xs font-bold text-emerald-400">✅ Vzor PDF je uložen v paměti</span>
-                    <button onclick="smazatVzor()" class="text-[9px] text-emerald-200 block w-full mt-1 underline">Nahrát nový vzor</button>
+                    <span class="text-xs font-bold text-emerald-400">✅ Prázdný vzor PDF je trvale v paměti</span>
+                    <button onclick="smazatVzor()" class="text-[9px] text-emerald-200 block w-full mt-1 underline">Chci nahrát nový vzor</button>
                 </div>
 
                 <div class="space-y-4">
@@ -102,14 +102,14 @@
                     <input type="text" id="ai-cislo-an" placeholder="Zadej aktuální BÚ / Číslo AN" class="w-full bg-slate-900 border border-amber-500/50 p-3 rounded-xl text-amber-100 outline-none text-xs font-bold">
                     
                     <div class="bg-slate-900/80 p-3 rounded-xl border border-slate-700">
-                        <label class="block text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-2">🛠️ Kalibrace zarovnání do tabulky</label>
+                        <label class="block text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-2">🛠️ Kalibrace zarovnání prvního řádku</label>
                         <div class="grid grid-cols-2 gap-2">
                             <div>
-                                <span class="text-[8px] text-slate-500">První řádek (Y) - Zvyš pro posun nahoru</span>
+                                <span class="text-[8px] text-slate-500">První řádek (Zvyš=Výš)</span>
                                 <input type="number" id="cal-y" value="510" class="w-full bg-black/50 border border-slate-600 p-2 text-xs text-white rounded outline-none" onchange="ulozKalibraci()">
                             </div>
                             <div>
-                                <span class="text-[8px] text-slate-500">Výška buňky (Rozestup řádků)</span>
+                                <span class="text-[8px] text-slate-500">Skok do další buňky</span>
                                 <input type="number" id="cal-space" value="70" class="w-full bg-black/50 border border-slate-600 p-2 text-xs text-white rounded outline-none" onchange="ulozKalibraci()">
                             </div>
                         </div>
@@ -132,16 +132,15 @@
             "022 - BRNO": { udrzba: 8, tech: 6, den: 3 }, "026 - BRNO": { udrzba: 8, tech: 6, den: 3 }, "125 - ROSICE": { udrzba: 8, tech: 6, den: 3 }, 
             "025 - BRNO": { udrzba: 2, tech: 1, den: 3, secondLast: true }, "OKŘÍŠKY": { udrzba: 2, tech: 1, den: 4, secondLast: true } 
         };
-        
-        // Jednoduchý "chlapský" slovník přesně jako na fotkách
-        const P_U = ["oprava obkladů", "čištění odpadů", "oprava dveří", "oprava skříněk", "zapravování, dotažení", "oprava poškozených regálů", "výměna baterie", "oprava dlažby", "seřízení pantů"];
-        const MATS = ["Spoj. mat", "Lepidlo", "Silikon", "1x baterie", "sprej", "panty", ""];
+        const P_U = ["oprava obkladů", "čištění odpadů", "oprava dveří", "oprava skříněk", "zapravování zdiva", "oprava poškozených regálů", "výměna baterie", "oprava dlažby", "seřízení pantů", "dotažení lišt"];
+        const MATS = ["Spoj. mat", "Lepidlo", "Silikon", "1x baterie", "Sprej", "Panty", "Tmel"];
 
         window.onload = () => {
             document.getElementById('datum-prace').value = new Date().toISOString().split('T')[0];
             vypocitejStatistiky();
-            if (localStorage.getItem('active_timer')) { startTime = new Date(localStorage.getItem('active_timer')); rezimBehu(); }
+            vykresliZaznamy(); // <--- Zobrazení deníku po spuštění
             
+            if (localStorage.getItem('active_timer')) { startTime = new Date(localStorage.getItem('active_timer')); rezimBehu(); }
             if (localStorage.getItem('tsc_vzor_pdf')) {
                 document.getElementById('pdf-upload-box').classList.add('hidden');
                 document.getElementById('pdf-ready-box').classList.remove('hidden');
@@ -150,52 +149,107 @@
             if (localStorage.getItem('cal_space')) document.getElementById('cal-space').value = localStorage.getItem('cal_space');
         };
 
+        // --- PDF PAMĚŤ A KALIBRACE ---
         function ulozitVzor(e) {
-            const file = e.target.files[0];
-            const reader = new FileReader();
+            const file = e.target.files[0]; const reader = new FileReader();
             reader.onload = function(evt) {
                 localStorage.setItem('tsc_vzor_pdf', evt.target.result);
                 document.getElementById('pdf-upload-box').classList.add('hidden');
                 document.getElementById('pdf-ready-box').classList.remove('hidden');
-                alert("✅ Čistý vzor byl trvale uložen do paměti prohlížeče!");
             };
             reader.readAsDataURL(file);
         }
+        function smazatVzor() { localStorage.removeItem('tsc_vzor_pdf'); document.getElementById('pdf-upload-box').classList.remove('hidden'); document.getElementById('pdf-ready-box').classList.add('hidden'); }
+        function ulozKalibraci() { localStorage.setItem('cal_y', document.getElementById('cal-y').value); localStorage.setItem('cal_space', document.getElementById('cal-space').value); }
 
-        function smazatVzor() {
-            localStorage.removeItem('tsc_vzor_pdf');
-            document.getElementById('pdf-upload-box').classList.remove('hidden');
-            document.getElementById('pdf-ready-box').classList.add('hidden');
-        }
-
-        function ulozKalibraci() {
-            localStorage.setItem('cal_y', document.getElementById('cal-y').value);
-            localStorage.setItem('cal_space', document.getElementById('cal-space').value);
-        }
-
-        function vymazatData() { if(confirm("Opravdu smazat deník?")) { localStorage.removeItem('kamil_denik_db'); location.reload(); } }
+        // --- MOZEK DENÍKU ---
+        function vymazatCelyDenik() { if(confirm("Opravdu smazat VŠE z deníku?")) { localStorage.removeItem('kamil_denik_db'); location.reload(); } }
+        
         function vypocitejStatistiky() {
             const db = JSON.parse(localStorage.getItem('kamil_denik_db') || "[]");
             const m = new Date().toISOString().slice(0, 7); let p = 0;
             db.forEach(z => { if(z.datum.startsWith(m)) p += z.trvani; });
             document.getElementById('stat-hodiny').innerText = `${Math.floor(p/60)}h ${p%60}m`;
         }
+
+        // ZDE JE NOVÁ FUNKCE, KTERÁ VYTVÁŘÍ TY ULOŽENÉ BLOKY
+        function vykresliZaznamy() {
+            const db = JSON.parse(localStorage.getItem('kamil_denik_db') || "[]");
+            const box = document.getElementById('seznam-zaznamu');
+            box.innerHTML = "";
+            
+            if(db.length === 0) {
+                box.innerHTML = "<div class='text-center text-[10px] text-slate-500 py-4'>Zatím tu nic nemáš. Začni měřit nahoře.</div>";
+                return;
+            }
+
+            // Výpis od nejnovějšího po nejstarší
+            [...db].reverse().forEach((z, reversedIndex) => {
+                const realIndex = db.length - 1 - reversedIndex; // Potřebujeme reálné ID kvůli mazání
+                box.innerHTML += `
+                    <div class="bg-slate-900/80 border border-slate-700 p-3 rounded-xl flex justify-between items-center relative overflow-hidden">
+                        <div class="absolute left-0 top-0 bottom-0 w-1 bg-cyan-500"></div>
+                        <div class="pl-2">
+                            <div class="text-[10px] font-bold text-cyan-300">${z.datum.split('-').reverse().join('.')} | <span class="text-white">${z.prodejna}</span></div>
+                            <div class="text-[9px] text-slate-400 mt-1">${z.popis || 'Bez popisu práce'}</div>
+                            ${z.material ? `<div class="text-[8px] text-emerald-400 mt-0.5">Mat: ${z.material}</div>` : ''}
+                        </div>
+                        <div class="text-right">
+                            <div class="text-sm font-bold text-white">${(z.trvani/60).toFixed(1)}h</div>
+                            <button onclick="smazZaznam(${realIndex})" class="text-[8px] text-red-500 mt-1 hover:underline">Smazat</button>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function smazZaznam(index) {
+            if(confirm("Opravdu smazat tento jeden záznam?")) {
+                const db = JSON.parse(localStorage.getItem('kamil_denik_db') || "[]");
+                db.splice(index, 1);
+                localStorage.setItem('kamil_denik_db', JSON.stringify(db));
+                vypocitejStatistiky();
+                vykresliZaznamy();
+            }
+        }
+
         function spustitDiktovani(id) {
             const sr = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
             sr.lang = 'cs-CZ'; sr.onresult = (e) => { document.getElementById(id).value += (document.getElementById(id).value ? " " : "") + e.results[0][0].transcript; };
             sr.start();
         }
-        function startPrace() { startTime = new Date(); localStorage.setItem('active_timer', startTime.toISOString()); rezimBehu(); }
+
+        function startPrace() { 
+            startTime = new Date(); localStorage.setItem('active_timer', startTime.toISOString()); rezimBehu(); 
+        }
+        
         function rezimBehu() {
-            document.getElementById('btn-start').classList.add('hidden'); document.getElementById('btn-stop').classList.remove('hidden'); document.getElementById('timer-ui').classList.remove('hidden');
+            document.getElementById('btn-start').classList.add('hidden'); 
+            document.getElementById('stop-controls').classList.remove('hidden'); 
+            document.getElementById('timer-ui').classList.remove('hidden');
             timerInterval = setInterval(() => { document.getElementById('clock').innerText = new Date(new Date() - startTime).toISOString().substr(11, 8); }, 1000);
         }
+        
         function stopPrace() {
+            ulozZaznam(Math.round((new Date() - startTime) / 60000));
+        }
+
+        function ulozRucne() {
+            const min = prompt("Kolik minut si chceš zapsat ručně? (např. 120 pro 2 hodiny)");
+            if(min && !isNaN(min)) {
+                ulozZaznam(parseInt(min));
+            }
+        }
+
+        function ulozZaznam(trvaniMinuty) {
             const pr = document.getElementById('prodejna').value; if(!pr) return alert("Vyber nejdřív lokalitu!");
             const db = JSON.parse(localStorage.getItem('kamil_denik_db') || "[]");
-            db.push({ datum: document.getElementById('datum-prace').value, prodejna: pr, popis: document.getElementById('popis').value, material: document.getElementById('material').value, trvani: Math.round((new Date() - startTime) / 60000) });
-            localStorage.setItem('kamil_denik_db', JSON.stringify(db)); location.reload();
+            db.push({ datum: document.getElementById('datum-prace').value, prodejna: pr, popis: document.getElementById('popis').value, material: document.getElementById('material').value, trvani: trvaniMinuty });
+            localStorage.setItem('kamil_denik_db', JSON.stringify(db)); 
+            localStorage.removeItem('active_timer');
+            location.reload();
         }
+
         function generovatReportSefovi() {
             const db = JSON.parse(localStorage.getItem('kamil_denik_db') || "[]"); 
             if (db.length === 0) return alert("Deník je zatím prázdný!");
@@ -205,7 +259,7 @@
             navigator.clipboard.writeText(t).then(() => alert("✅ Report zkopírován!"));
         }
 
-        // Vždy po celých a půlhodinách
+        // --- AUTOMAT NA ALBERT PDF ---
         function rozdelHodiny(celkem, pocet) {
             let v = new Array(pocet).fill(0);
             if (pocet === 0 || celkem <= 0) return v;
@@ -220,14 +274,14 @@
 
         async function vygenerujAlbertPDF() {
             const base64Pdf = localStorage.getItem('tsc_vzor_pdf');
-            if (!base64Pdf) return alert("⚠️ Nejdřív musíš v bodě 1 nahrát ten čistý PDF vzor!");
+            if (!base64Pdf) return alert("⚠️ Nahraj nejdřív čistý vzor TSC do paměti!");
 
             const pId = document.getElementById('ai-prodejna').value;
             const an = document.getElementById('ai-cislo-an').value;
             if(!an) return alert("Zadej Číslo AN!");
 
             const btn = document.getElementById('btn-vygenerovat');
-            btn.innerText = "⏳ Vytvářím PDF...";
+            btn.innerText = "⏳ Vytvářím čistý výkaz...";
 
             try {
                 const arrayBuffer = await fetch(base64Pdf).then(res => res.arrayBuffer());
@@ -261,6 +315,7 @@
                     dny[den].u += udrzbaHod;
                     if(z.popis) dny[den].p.push(z.popis); 
                     if(z.material) dny[den].m.push(z.material);
+                    
                     limit.udrzba -= udrzbaHod;
                 });
                 if(limit.udrzba < 0) limit.udrzba = 0;
@@ -274,64 +329,55 @@
                     dny[den].t += rozvrhT[index];
                     
                     if(rozvrhU[index] > 0) { 
-                        // Jednoduchý text bez odrážek a dlouhých vět
                         dny[den].p.push(P_U[Math.floor(Math.random()*P_U.length)]);
-                        // Přidá druhé slovo občas
-                        if(Math.random() > 0.5) dny[den].p.push(P_U[Math.floor(Math.random()*P_U.length)]); 
+                        if(rozvrhU[index] >= 2) dny[den].p.push(P_U[Math.floor(Math.random()*P_U.length)]); 
                         
-                        let randomMat = MATS[Math.floor(Math.random()*MATS.length)];
-                        if (randomMat) dny[den].m.push(randomMat); 
+                        let rMat = MATS[Math.floor(Math.random()*MATS.length)];
+                        if (rMat) dny[den].m.push(rMat); 
                     }
                 });
 
                 const cerna = rgb(0, 0, 0);
-                // Vložení nadpisu - zarovnáno doprostřed polí
                 page.drawText(pId.split('-')[0].trim(), { x: 160, y: 645, size: 10, font: customFont, color: cerna });
                 page.drawText(`${mes} / ${rok}`, { x: 420, y: 645, size: 10, font: customFont, color: cerna });
 
-                // ZDE JE KLÍČ K ZAROVNÁNÍ
                 let startY = parseInt(document.getElementById('cal-y').value);  
                 let radekMezera = parseInt(document.getElementById('cal-space').value); 
-                let i = 0;
                 
+                let i = 0;
                 Object.keys(dny).sort((a,b)=>a-b).forEach(den => {
                     let r = dny[den];
-                    let topY = startY - (i * radekMezera); // Toto je absolutní horní okraj buňky
-                    let bottomY = topY - (radekMezera / 2) - 5; // Toto je spodní část buňky pro údržbu
+                    let topY = startY - (i * radekMezera); 
+                    let bottomY = topY - (radekMezera / 2) - 5; 
                     
-                    // Sloupec 1 (AN a Datum) - nahoře
                     page.drawText(an, { x: 50, y: topY, size: 9, font: customFont, color: cerna });
                     page.drawText(`${den}.${mes}.`, { x: 50, y: topY - 12, size: 10, font: customFont, color: cerna });
 
-                    // Technologie (Vždy v horní polovině buňky)
+                    let textLines = []; let matLines = []; let hourLines = [];
+
                     if (r.t > 0) {
-                        page.drawText(`${r.t.toFixed(1).replace('.',',')}h`, { x: 520, y: topY, size: 11, font: customFont, color: cerna });
-                        page.drawText("kontrola teh.", { x: 185, y: topY, size: 9, font: customFont, color: cerna });
-                        
-                        let currentTechY = topY - 10;
+                        textLines.push("kontrola teh."); matLines.push(""); hourLines.push(`${r.t.toFixed(1).replace('.',',')}h`);
                         if (pId.includes("851") || pId.includes("403")) {
-                            page.drawText("kon. nev. vyhr. tech. zař.", { x: 185, y: currentTechY, size: 9, font: customFont, color: cerna });
-                            currentTechY -= 10;
+                            textLines.push("kon. nev. vyhr. tech. zař."); matLines.push(""); hourLines.push("");
                         }
                         if (den > 14 && den < 22) {
-                            page.drawText("odečty energií", { x: 185, y: currentTechY, size: 9, font: customFont, color: cerna });
+                            textLines.push("odečty energií"); matLines.push(""); hourLines.push("");
                         }
                     }
 
-                    // Údržba (Vždy ve spodní polovině buňky, aby se to nikdy nepřekrývalo)
                     if (r.u > 0) {
-                        // Pokud tam nebyla technologie, posuneme údržbu trošku výš
-                        if(r.t === 0) bottomY = topY - 10;
-
-                        page.drawText(`${r.u.toFixed(1).replace('.',',')}h`, { x: 520, y: bottomY, size: 11, font: customFont, color: cerna });
-                        
-                        // Jednoduchý text pod sebou (max 2 řádky, žádné odrážky)
-                        let udrzbaText = r.p.slice(0,2).join('\n');
-                        let matText = r.m.slice(0,2).join('\n');
-                        
-                        page.drawText(udrzbaText, { x: 185, y: bottomY, size: 9, font: customFont, color: cerna, lineHeight: 11 });
-                        page.drawText(matText, { x: 400, y: bottomY, size: 9, font: customFont, color: cerna, lineHeight: 11 });
+                        for (let lineIndex = 0; lineIndex < r.p.length; lineIndex++) {
+                            textLines.push(r.p[lineIndex]);
+                            if (lineIndex === 0 && r.m.length > 0) { matLines.push(r.m.join(', ')); } else { matLines.push(""); }
+                            if (lineIndex === 0) { hourLines.push(`${r.u.toFixed(1).replace('.',',')}h`); } else { hourLines.push(""); }
+                        }
                     }
+
+                    let fontSize = 11; let lineH = 15; 
+                    page.drawText(textLines.join('\n'), { x: 185, y: topY, size: fontSize, font: customFont, color: cerna, lineHeight: lineH });
+                    page.drawText(matLines.join('\n'), { x: 400, y: topY, size: fontSize, font: customFont, color: cerna, lineHeight: lineH });
+                    page.drawText(hourLines.join('\n'), { x: 520, y: topY, size: 12, font: customFont, color: cerna, lineHeight: lineH });
+
                     i++;
                 });
 
