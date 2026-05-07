@@ -6,10 +6,8 @@
     <title>Albert Facility PRO - Originál PDF</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&display=swap" rel="stylesheet">
-    
     <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
     <script src="https://unpkg.com/@pdf-lib/fontkit/dist/fontkit.umd.min.js"></script>
-    
     <style>
         ::-webkit-scrollbar { display: none; }
         .font-digital { font-family: 'Orbitron', sans-serif; }
@@ -37,41 +35,44 @@
             <div class="bg-slate-800/30 p-5 rounded-2xl border border-slate-700/50">
                 <div class="flex justify-between items-center mb-4">
                     <h2 class="text-xs font-black text-cyan-400 uppercase tracking-widest">📓 Zápis do deníku</h2>
-                    <span id="gps-status" class="text-[9px] font-bold text-emerald-400 hidden animate-pulse">📍 GPS ZAMĚŘENO</span>
                 </div>
                 
                 <div class="grid grid-cols-2 gap-3 mb-3">
                     <input type="date" id="datum-prace" class="w-full bg-slate-900/80 border border-slate-600/50 p-3 rounded-xl text-cyan-100 outline-none text-xs">
-                    
-                    <div class="relative w-full">
-                        <select id="prodejna" class="w-full bg-slate-900/80 border border-slate-600/50 p-3 pr-10 rounded-xl text-cyan-100 outline-none text-xs appearance-none">
-                            <option value="">Vyber barák...</option>
-                            <optgroup label="Třebíč a okolí">
-                                <option value="171 - TŘEBÍČ">171 - Třebíč</option><option value="851 - TŘEBÍČ">851 - Třebíč</option><option value="403 - TŘEBÍČ">403 - Třebíč</option><option value="OKŘÍŠKY">Okříšky</option>
-                            </optgroup>
-                            <optgroup label="Brno a okolí">
-                                <option value="025 - BRNO">025 - Brno</option><option value="022 - BRNO">022 - Brno</option><option value="026 - BRNO">026 - Brno</option><option value="125 - ROSICE">125 - Rosice</option>
-                            </optgroup>
-                            <optgroup label="Jiné">
-                                <option value="354 - J. HRADEC">354 - J. Hradec</option><option value="Jiné / Cesta">Jiné / Cesta</option>
-                            </optgroup>
-                        </select>
-                        <button onclick="najdiMojiPolohu()" class="absolute right-2 top-2 text-lg hover:scale-110 transition-all" title="Zaměřit polohu">📍</button>
+                    <select id="prodejna" class="w-full bg-slate-900/80 border border-slate-600/50 p-3 rounded-xl text-cyan-100 outline-none text-xs">
+                        <option value="">Lokalita...</option>
+                        <option value="171 - TŘEBÍČ">171 - Třebíč</option><option value="851 - TŘEBÍČ">851 - Třebíč</option><option value="403 - TŘEBÍČ">403 - Třebíč</option>
+                        <option value="025 - BRNO">025 - Brno</option><option value="022 - BRNO">022 - Brno</option><option value="026 - BRNO">026 - Brno</option><option value="125 - ROSICE">125 - Rosice</option>
+                        <option value="OKŘÍŠKY">Okříšky</option><option value="354 - J. HRADEC">354 - J. Hradec</option>
+                    </select>
+                </div>
+
+                <div class="bg-slate-900/50 border border-slate-600/50 p-3 rounded-xl flex justify-between items-center mb-3">
+                    <div class="text-[9px] font-bold text-orange-400 uppercase tracking-widest">Práce MIMO paušál (Šéf)</div>
+                    <div class="relative inline-block w-10 h-5 align-middle select-none">
+                        <input type="checkbox" id="typ-prace" class="toggle-checkbox absolute block w-5 h-5 rounded-full bg-white border-4 border-slate-700 appearance-none cursor-pointer transition-all duration-300"/>
+                        <label for="typ-prace" class="toggle-label block overflow-hidden h-5 rounded-full bg-slate-700 cursor-pointer"></label>
                     </div>
                 </div>
 
+                <div class="relative mb-2">
+                    <textarea id="popis" rows="2" class="w-full bg-slate-900/80 border border-slate-600/50 p-3 pr-10 rounded-xl text-cyan-50 outline-none text-xs" placeholder="Popis práce (nadiktuj)..."></textarea>
+                    <button onclick="spustitDiktovani('popis')" class="absolute top-2 right-2 text-lg">🎙️</button>
+                </div>
+
                 <div class="relative mb-4">
-                    <textarea id="popis" rows="2" class="w-full bg-slate-900/80 border border-slate-600/50 p-3 rounded-xl text-cyan-50 outline-none text-xs" placeholder="Krátká poznámka k práci..."></textarea>
+                    <textarea id="material" rows="2" class="w-full bg-slate-900/80 border border-slate-600/50 p-3 pr-10 rounded-xl text-emerald-100 outline-none text-xs" placeholder="Materiál z účtenky (nadiktuj)..."></textarea>
+                    <button onclick="spustitDiktovani('material')" class="absolute top-2 right-2 text-lg">🎙️</button>
                 </div>
 
                 <div id="timer-ui" class="bg-[#020617] p-4 rounded-xl text-center border border-cyan-500/30 hidden mb-4">
                     <div id="clock" class="text-4xl font-digital font-black text-white neon-text-blue">00:00:00</div>
                 </div>
                 
-                <button id="btn-start" onclick="startPrace()" class="w-full bg-emerald-600 hover:bg-emerald-500 py-4 rounded-xl font-black text-sm uppercase tracking-widest active:scale-95 transition-all shadow-lg shadow-emerald-900/20">START STOPKY</button>
-                <button id="btn-stop" onclick="stopPrace()" class="hidden w-full bg-red-600 hover:bg-red-500 py-4 rounded-xl font-black text-sm uppercase tracking-widest active:scale-95 transition-all shadow-lg shadow-red-900/20">UKONČIT & ULOŽIT</button>
+                <button id="btn-start" onclick="startPrace()" class="w-full bg-emerald-600 hover:bg-emerald-500 py-4 rounded-xl font-black text-sm uppercase tracking-widest">START STOPKY</button>
+                <button id="btn-stop" onclick="stopPrace()" class="hidden w-full bg-red-600 hover:bg-red-500 py-4 rounded-xl font-black text-sm uppercase tracking-widest">UKONČIT & ULOŽIT</button>
 
-                <button onclick="generovatReportSefovi()" class="w-full text-cyan-400 text-[10px] font-bold uppercase mt-4 text-center tracking-widest hover:underline bg-slate-900/50 p-3 rounded-xl border border-cyan-900/50 active:scale-95">
+                <button onclick="generovatReportSefovi()" class="w-full text-cyan-400 text-[10px] font-bold uppercase mt-4 text-center tracking-widest hover:underline bg-slate-900/50 p-3 rounded-xl border border-cyan-900/50">
                     📋 Zkopírovat report pro Šéfa
                 </button>
             </div>
@@ -98,7 +99,7 @@
 
                     <input type="text" id="ai-cislo-an" placeholder="Zadej aktuální BÚ / Číslo AN" class="w-full bg-slate-900 border border-amber-500/50 p-3 rounded-xl text-amber-100 outline-none text-xs font-bold">
                     
-                    <button id="btn-vygenerovat" onclick="vygenerujAlbertPDF()" class="w-full bg-amber-600 hover:bg-amber-500 py-4 rounded-xl font-bold uppercase tracking-widest text-xs transition-all active:scale-95 shadow-lg shadow-amber-900/20">
+                    <button id="btn-vygenerovat" onclick="vygenerujAlbertPDF()" class="w-full bg-amber-600 hover:bg-amber-500 py-4 rounded-xl font-bold uppercase tracking-widest text-xs transition-all active:scale-95">
                         ⚙️ Zapsat a stáhnout PDF
                     </button>
                 </div>
@@ -110,49 +111,17 @@
     <script>
         let startTime = null; let timerInterval = null;
         
-        // Cíle pro generátor Albert PDF
         const ALBERT_CILY = {
             "171 - TŘEBÍČ": { udrzba: 15, tech: 4, den: 5 }, "851 - TŘEBÍČ": { udrzba: 16, tech: 16, den: 2 }, "403 - TŘEBÍČ": { udrzba: 12, tech: 7, den: 4 }, 
             "022 - BRNO": { udrzba: 8, tech: 6, den: 3 }, "026 - BRNO": { udrzba: 8, tech: 6, den: 3 }, "125 - ROSICE": { udrzba: 8, tech: 6, den: 3 }, 
             "025 - BRNO": { udrzba: 2, tech: 1, den: 3, secondLast: true }, "OKŘÍŠKY": { udrzba: 2, tech: 1, den: 4, secondLast: true } 
         };
-        const POPISY = ["oprava obkladů", "čištění odpadů", "oprava dveří", "oprava skříněk", "zapravování, dotažení", "oprava poškozených regálů", "výměna baterie"];
-
-        // 🗺️ GPS LOGIKA PRO AUTOMATICKÝ VÝBĚR BARÁKU
-        const GPS_LOKACE = [
-            { id: "171 - TŘEBÍČ", lat: 49.214, lon: 15.881, name: "Třebíči" },
-            { id: "025 - BRNO", lat: 49.195, lon: 16.606, name: "Brně" },
-            { id: "125 - ROSICE", lat: 49.182, lon: 16.387, name: "Rosicích" },
-            { id: "OKŘÍŠKY", lat: 49.245, lon: 15.766, name: "Okříškách" },
-            { id: "354 - J. HRADEC", lat: 49.144, lon: 15.003, name: "J. Hradci" }
-        ];
-
-        function najdiMojiPolohu() {
-            if (navigator.geolocation) {
-                document.getElementById('gps-status').innerText = "📍 Hledám...";
-                document.getElementById('gps-status').classList.remove('hidden');
-                
-                navigator.geolocation.getCurrentPosition(position => {
-                    let userLat = position.coords.latitude;
-                    let userLon = position.coords.longitude;
-                    
-                    let nejblizsi = GPS_LOKACE[0];
-                    let minVzdalenost = 9999;
-
-                    GPS_LOKACE.forEach(lokace => {
-                        let vzd = Math.pow(lokace.lat - userLat, 2) + Math.pow(lokace.lon - userLon, 2);
-                        if(vzd < minVzdalenost) { minVzdalenost = vzd; nejblizsi = lokace; }
-                    });
-
-                    document.getElementById('prodejna').value = nejblizsi.id;
-                    document.getElementById('gps-status').innerText = `📍 JSI V ${nejblizsi.name.toUpperCase()}!`;
-                }, () => {
-                    document.getElementById('gps-status').innerText = "❌ Poloha odepřena";
-                });
-            } else {
-                alert("Tvůj prohlížeč nepodporuje GPS.");
-            }
-        }
+        
+        // 🚀 HUTNÁ DATABÁZE VÝRAZŮ (AI to poskládá do dlouhých odstavců)
+        const P1 = ["Oprava dilatačních spár", "Seřízení a promazání pantů dveří", "Čištění odpadů v zázemí", "Oprava a údržba regálů", "Výměna prasklé dlažby", "Montáž nových polic", "Zapravování omítky"];
+        const P2 = ["kontrola a výměna osvětlení", "drobné instalatérské opravy", "oprava rohů zdiva", "dotažení ochranných lišt", "oprava šatních skříněk", "výměna poškozených madel", "seřízení zavíračů dveří"];
+        const P3 = ["celkový úklid po opravě", "zápis do knihy závad", "likvidace starého materiálu", "odzkoušení funkčnosti"];
+        const MATS = ["Spoj. materiál", "Silikon", "Tmel", "Lepidlo", "Mazivo", "Sprej", "LED zdroj", "Těsnění", "Kování"];
 
         window.onload = () => {
             document.getElementById('datum-prace').value = new Date().toISOString().split('T')[0];
@@ -160,142 +129,176 @@
             if (localStorage.getItem('active_timer')) { startTime = new Date(localStorage.getItem('active_timer')); rezimBehu(); }
         };
 
-        // --- FUNKCE DENÍKU ---
-        function vymazatData() { if(confirm("Opravdu smazat všechny záznamy z deníku za tento měsíc?")) { localStorage.removeItem('kamil_denik_db'); location.reload(); } }
-
+        function vymazatData() { if(confirm("Opravdu smazat deník?")) { localStorage.removeItem('kamil_denik_db'); location.reload(); } }
         function vypocitejStatistiky() {
             const db = JSON.parse(localStorage.getItem('kamil_denik_db') || "[]");
             const m = new Date().toISOString().slice(0, 7); let p = 0;
             db.forEach(z => { if(z.datum.startsWith(m)) p += z.trvani; });
             document.getElementById('stat-hodiny').innerText = `${Math.floor(p/60)}h ${p%60}m`;
         }
-
         function startPrace() { startTime = new Date(); localStorage.setItem('active_timer', startTime.toISOString()); rezimBehu(); }
         function rezimBehu() {
             document.getElementById('btn-start').classList.add('hidden'); document.getElementById('btn-stop').classList.remove('hidden'); document.getElementById('timer-ui').classList.remove('hidden');
             timerInterval = setInterval(() => { document.getElementById('clock').innerText = new Date(new Date() - startTime).toISOString().substr(11, 8); }, 1000);
         }
-
         function stopPrace() {
-            const pr = document.getElementById('prodejna').value;
-            if(!pr) return alert("Vyber nejdřív lokalitu!");
+            const pr = document.getElementById('prodejna').value; if(!pr) return alert("Vyber nejdřív lokalitu!");
             const db = JSON.parse(localStorage.getItem('kamil_denik_db') || "[]");
-            db.push({ datum: document.getElementById('datum-prace').value, prodejna: pr, popis: document.getElementById('popis').value, trvani: Math.round((new Date() - startTime) / 60000) });
+            db.push({ datum: document.getElementById('datum-prace').value, prodejna: pr, popis: document.getElementById('popis').value, material: document.getElementById('material').value, trvani: Math.round((new Date() - startTime) / 60000) });
             localStorage.setItem('kamil_denik_db', JSON.stringify(db)); location.reload();
         }
-
         function generovatReportSefovi() {
             const db = JSON.parse(localStorage.getItem('kamil_denik_db') || "[]"); 
             if (db.length === 0) return alert("Deník je zatím prázdný!");
-            let t = "Měsíční report (Deník prací):\n\n"; let celkem = 0;
+            let t = "Měsíční report:\n\n"; let celkem = 0;
             db.forEach(z => { t += `- ${z.datum} | ${z.prodejna}: ${(z.trvani/60).toFixed(1)}h (${z.popis})\n`; celkem += z.trvani; });
-            t += `\nCelkem odpracováno: ${(celkem/60).toFixed(1)}h`;
-            navigator.clipboard.writeText(t).then(() => alert("✅ Report zkopírován do schránky! Můžeš ho vložit do zprávy šéfovi."));
+            t += `\nCelkem: ${(celkem/60).toFixed(1)}h`;
+            navigator.clipboard.writeText(t).then(() => alert("✅ Report zkopírován!"));
         }
 
-        // --- AUTOMAT NA ALBERT PDF (NEZÁVISLÝ NA DENÍKU) ---
+        // Inteligentní kráječ hodin (Rozděluje jen po 0.5h, 1.0h, 1.5h - žádné zlomky)
+        function rozdelHodiny(celkem, pocet) {
+            let v = new Array(pocet).fill(0);
+            if (pocet === 0 || celkem <= 0) return v;
+            celkem = Math.round(celkem * 2) / 2; 
+            let zbytek = celkem;
+            let prumer = Math.floor((celkem / pocet) * 2) / 2; 
+            for(let i=0; i<pocet; i++) { v[i] = prumer; zbytek -= prumer; }
+            let idx = 0;
+            while(zbytek >= 0.5 && zbytek < 100) { v[idx] += 0.5; zbytek -= 0.5; idx = (idx + 1) % pocet; }
+            return v;
+        }
+
         async function vygenerujAlbertPDF() {
             const fileInput = document.getElementById('pdf-template');
             const btn = document.getElementById('btn-vygenerovat');
-            if (!fileInput.files.length) return alert("⚠️ Nejdřív musíš v bodě 1. nahrát čistý PDF vzor od TSC!");
+            if (!fileInput.files.length) return alert("⚠️ Nejdřív nahraj vzor od TSC!");
 
             const pId = document.getElementById('ai-prodejna').value;
             const an = document.getElementById('ai-cislo-an').value;
             if(!an) return alert("Zadej Číslo AN pro tento výkaz!");
 
-            btn.innerText = "⏳ Vytvářím PDF (Tohle může pár vteřin trvat)...";
+            btn.innerText = "⏳ Vytvářím PDF...";
 
             try {
-                // Rychlé přečtení lokálního souboru
                 const file = fileInput.files[0];
                 const arrayBuffer = await new Promise((resolve, reject) => {
-                    const reader = new FileReader(); 
-                    reader.onload = () => resolve(reader.result); 
-                    reader.onerror = () => reject(new Error("Nelze přečíst PDF.")); 
-                    reader.readAsArrayBuffer(file);
+                    const reader = new FileReader(); reader.onload = () => resolve(reader.result); reader.onerror = () => reject(new Error("Nelze přečíst PDF.")); reader.readAsArrayBuffer(file);
                 });
 
-                // Spuštění knihovny PDF-lib a registrace FONTKITU (Tohle předtím chybělo!)
                 const { PDFDocument, rgb } = PDFLib;
                 const pdfDoc = await PDFDocument.load(arrayBuffer);
-                pdfDoc.registerFontkit(window.fontkit); // 👈 TADY JE TA MAGIE PRO ČEŠTINU
+                pdfDoc.registerFontkit(window.fontkit);
                 const page = pdfDoc.getPages()[0]; 
 
-                // Stažení písma s podporou Č, Ř, Ž
                 const fontUrl = 'https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.66/fonts/Roboto/Roboto-Regular.ttf';
                 const fontBytes = await fetch(fontUrl).then(res => res.arrayBuffer());
                 const customFont = await pdfDoc.embedFont(fontBytes);
 
-                // --- AI Vymyslí rozvrh ---
                 const limit = { ...ALBERT_CILY[pId] };
+                const db = JSON.parse(localStorage.getItem('kamil_denik_db') || "[]");
                 const d = new Date(); const rok = d.getFullYear(); const mes = d.getMonth() + 1;
+                const prefix = `${rok}-${String(mes).padStart(2, '0')}`;
                 const pocetDni = new Date(rok, mes, 0).getDate();
                 
                 let dnyVhodne = [];
                 for (let i = 1; i <= pocetDni; i++) { if (new Date(rok, mes-1, i).getDay() === limit.den) dnyVhodne.push(i); }
                 if (limit.secondLast && dnyVhodne.length >= 2) dnyVhodne = [dnyVhodne[dnyVhodne.length - 2]];
 
-                let h_u = limit.udrzba > 0 ? limit.udrzba / dnyVhodne.length : 0;
-                let h_t = limit.tech > 0 ? limit.tech / dnyVhodne.length : 0;
-
+                // Odečtení tvé RUČNĚ zaznamenané práce z deníku (včetně účtenek)
+                let rucniHodiny = 0;
                 let dny = {};
-                dnyVhodne.forEach(den => {
-                    dny[den] = { u: h_u, t: h_t, p: [], m: [] };
-                    if(h_u > 0) { 
-                        dny[den].p.push(POPISY[Math.floor(Math.random()*POPISY.length)] + ", " + POPISY[Math.floor(Math.random()*POPISY.length)]); 
-                        dny[den].m.push("Spoj. mat"); 
+                
+                db.filter(z => z.prodejna === pId && z.datum.startsWith(prefix)).forEach(z => {
+                    let den = parseInt(z.datum.split('-')[2]);
+                    if(!dny[den]) dny[den] = { u: 0, t: 0, p: [], m: [] };
+                    
+                    let udrzbaHod = Math.round((z.trvani / 60) * 2) / 2; // Zaokrouhleno
+                    dny[den].u += udrzbaHod;
+                    if(z.popis) dny[den].p.push("- " + z.popis);
+                    if(z.material) dny[den].m.push("- " + z.material);
+                    
+                    limit.udrzba -= udrzbaHod;
+                });
+                if(limit.udrzba < 0) limit.udrzba = 0;
+
+                // Rozdělení zbytku AI hodin
+                let rozvrhU = rozdelHodiny(limit.udrzba, dnyVhodne.length);
+                let rozvrhT = rozdelHodiny(limit.tech, dnyVhodne.length);
+
+                dnyVhodne.forEach((den, index) => {
+                    if(!dny[den]) dny[den] = { u: 0, t: 0, p: [], m: [] };
+                    dny[den].u += rozvrhU[index];
+                    dny[den].t += rozvrhT[index];
+                    
+                    if(rozvrhU[index] > 0) { 
+                        // AI Generátor masivního textu (Spustí se jen tam, kde se přidávají umělé hodiny)
+                        let hutnyPopis = "- " + P1[Math.floor(Math.random()*P1.length)] + ",\n  " + P2[Math.floor(Math.random()*P2.length)] + ",\n  " + P3[Math.floor(Math.random()*P3.length)] + ".";
+                        dny[den].p.push(hutnyPopis); 
+                        
+                        let mat1 = MATS[Math.floor(Math.random()*MATS.length)];
+                        let mat2 = MATS[Math.floor(Math.random()*MATS.length)];
+                        let hutnyMat = mat1 === mat2 ? "- " + mat1 : "- " + mat1 + ",\n- " + mat2;
+                        dny[den].m.push(hutnyMat); 
                     }
                 });
 
-                // --- TISK PŘÍMO DO PRÁZDNÉHO PDF ---
                 const cerna = rgb(0, 0, 0);
-                
-                // Objekt a Období
                 page.drawText(pId.split('-')[0].trim(), { x: 140, y: 652, size: 10, font: customFont, color: cerna });
                 page.drawText(`${mes} / ${rok}`, { x: 420, y: 652, size: 10, font: customFont, color: cerna });
 
-                // Souřadnice tabulky (Lze upravit, pokud to padne mimo řádky)
                 let startY = 515;  
                 let radekMezera = 58; 
                 let i = 0;
                 
                 Object.keys(dny).sort((a,b)=>a-b).forEach(den => {
                     let r = dny[den];
-                    let aktualniY = startY - (i * radekMezera);
-                    let jeOdecet = (den > 14 && den < 22) ? " + odečty" : "";
+                    let baseY = startY - (i * radekMezera);
                     
-                    page.drawText(an, { x: 45, y: aktualniY + 15, size: 10, font: customFont, color: cerna });
-                    page.drawText(`${den}.${mes}.`, { x: 45, y: aktualniY, size: 11, font: customFont, color: cerna });
+                    page.drawText(an, { x: 42, y: baseY + 15, size: 9, font: customFont, color: cerna });
+                    page.drawText(`${den}.${mes}.`, { x: 42, y: baseY, size: 11, font: customFont, color: cerna });
 
-                    if (r.t > 0) page.drawText(`Kontrola teh. a vyhr. zař${jeOdecet}`, { x: 190, y: aktualniY + 15, size: 9, font: customFont, color: cerna });
-                    if (r.u > 0) page.drawText(r.p.join(', ').substring(0, 45), { x: 190, y: aktualniY, size: 9, font: customFont, color: cerna });
+                    let jeOdecet = (den > 14 && den < 22) ? "\n+ odečty energií" : "";
+                    
+                    // Kreslení Technologie (Nahoře)
+                    if (r.t > 0) {
+                        let textTech = "Kontrola teh.";
+                        if (pId.includes("851") || pId.includes("403")) textTech += "\nkon. nev. vyhr. tech. zař.";
+                        textTech += jeOdecet;
 
-                    if (r.u > 0) page.drawText(r.m.join(', ').substring(0, 20), { x: 395, y: aktualniY, size: 9, font: customFont, color: cerna });
+                        page.drawText(textTech, { x: 185, y: baseY + 15, size: 9, font: customFont, color: cerna, lineHeight: 10 });
+                        page.drawText(`${r.t.toFixed(1).replace('.',',')}h`, { x: 515, y: baseY + 15, size: 11, font: customFont, color: cerna });
+                    }
 
-                    if (r.t > 0) page.drawText(`${r.t.toFixed(1).replace('.',',')}h`, { x: 515, y: aktualniY + 15, size: 11, font: customFont, color: cerna });
-                    if (r.u > 0) page.drawText(`${r.u.toFixed(1).replace('.',',')}h`, { x: 515, y: aktualniY, size: 11, font: customFont, color: cerna });
+                    // Kreslení Údržby s automatickým ZALAMOVÁNÍM textu (Dole)
+                    if (r.u > 0) {
+                        let udrzbaY = (r.t > 0) ? baseY - 12 : baseY + 15; // Posun dolů, pokud je nad tím technologie
+                        
+                        // Uděláme tenkou přerušovanou čáru mezi technologií a údržbou
+                        if (r.t > 0) {
+                            page.drawLine({ start: { x: 185, y: baseY - 2 }, end: { x: 540, y: baseY - 2 }, thickness: 0.5, color: cerna, dashArray: [2, 2] });
+                        }
 
+                        let textPopisu = r.p.join('\n');
+                        let textMat = r.m.join('\n');
+
+                        page.drawText(textPopisu, { x: 185, y: udrzbaY, size: 8, font: customFont, color: cerna, maxWidth: 195, lineHeight: 10 });
+                        page.drawText(textMat, { x: 395, y: udrzbaY, size: 8, font: customFont, color: cerna, maxWidth: 100, lineHeight: 10 });
+                        page.drawText(`${r.u.toFixed(1).replace('.',',')}h`, { x: 515, y: udrzbaY, size: 11, font: customFont, color: cerna });
+                    }
                     i++;
                 });
 
-                // ULOŽENÍ A STAŽENÍ S POJISTKOU PRO IPHONE/ANDROID
                 const pdfBytes = await pdfDoc.save();
                 const blob = new Blob([pdfBytes], { type: 'application/pdf' });
-                const link = document.createElement('a');
-                link.href = URL.createObjectURL(blob);
-                link.download = `Vykaz_Albert_${pId.split('-')[0].trim()}.pdf`;
-                document.body.appendChild(link); // Nutné pro iPhony
-                link.click();
-                document.body.removeChild(link);
+                const link = document.createElement('a'); link.href = URL.createObjectURL(blob); link.download = `Vykaz_Albert_${pId.split('-')[0].trim()}.pdf`;
+                document.body.appendChild(link); link.click(); document.body.removeChild(link);
 
                 btn.innerText = "✅ Staženo! (Koukni do Souborů)";
-                setTimeout(() => { btn.innerText = "⚙️ Vyplnit a stáhnout PDF"; }, 4000);
+                setTimeout(() => { btn.innerText = "⚙️ Zapsat a stáhnout PDF"; }, 4000);
 
             } catch (error) {
-                // Přesný výpis chyby
-                console.error(error);
-                alert(`🔴 CHYBA: ${error.message}\n\nZkus si obnovit stránku.`);
-                btn.innerText = "⚙️ Zkusit znovu";
+                console.error(error); alert(`🔴 CHYBA: ${error.message}\n\nZkus si obnovit stránku.`); btn.innerText = "⚙️ Zkusit znovu";
             }
         }
     </script>
