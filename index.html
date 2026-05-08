@@ -7,13 +7,12 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
-    <script src="https://unpkg.com/@pdf-lib/fontkit/dist/fontkit.umd.min.js"></script>
     <style>
         ::-webkit-scrollbar { display: none; }
         body { font-family: 'Inter', sans-serif; background: #020617; color: #e2e8f0; }
         .font-digital { font-family: 'Orbitron', sans-serif; }
         .glass { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(16px); border: 1px solid rgba(255, 255, 255, 0.08); }
-        .mic-active { animation: pulse-red 1.5s infinite; background: #ef4444 !important; color: white !important; }
+        .mic-active { animation: pulse-red 1.5s infinite; background: #ef4444 !important; }
         @keyframes pulse-red { 0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); } 70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); } 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); } }
     </style>
 </head>
@@ -23,10 +22,10 @@
         
         <div class="glass rounded-[2.5rem] p-6 shadow-2xl flex justify-between items-center border-b-4 border-sky-500">
             <div>
-                <h1 class="text-[9px] font-black tracking-widest uppercase opacity-40 mb-1">Odpracováno v měsíci</h1>
+                <h1 class="text-[9px] font-black tracking-widest uppercase opacity-40 mb-1">Měsíční Odpracováno</h1>
                 <div class="text-3xl font-digital font-bold text-sky-400" id="stat-hodiny">0h 0m</div>
             </div>
-            <button onclick="vymazatCelyDenik()" class="bg-rose-500/20 text-rose-400 text-[10px] px-4 py-2 rounded-full border border-rose-500/30 font-bold uppercase">Reset</button>
+            <button onclick="vymazatData()" class="bg-rose-500/20 text-rose-400 text-[10px] px-4 py-2 rounded-full border border-rose-500/30 font-bold uppercase">Reset</button>
         </div>
 
         <div class="glass rounded-[2.5rem] p-6 space-y-5">
@@ -48,12 +47,12 @@
 
             <div class="relative">
                 <textarea id="popis" rows="2" class="w-full bg-slate-900 border border-slate-700 p-4 pr-12 rounded-2xl text-sm outline-none focus:border-sky-500" placeholder="Popis práce..."></textarea>
-                <button id="mic-popis" onclick="toggleDiktovani('popis')" class="absolute right-3 top-3 w-10 h-10 bg-slate-800 rounded-2xl flex items-center justify-center text-xl">🎙️</button>
+                <button id="mic-popis" onclick="toggleDiktovani('popis')" class="absolute right-3 top-3 w-10 h-10 bg-slate-800 rounded-2xl flex items-center justify-center text-xl transition-all">🎙️</button>
             </div>
 
             <div class="relative">
                 <input id="material-rucni" type="text" class="w-full bg-slate-900 border border-slate-700 p-4 pr-12 rounded-2xl text-sm outline-none focus:border-sky-500" placeholder="Materiál z účtenky...">
-                <button id="mic-mat" onclick="toggleDiktovani('material-rucni')" class="absolute right-3 top-2.5 w-10 h-10 bg-slate-800 rounded-2xl flex items-center justify-center text-xl">🎙️</button>
+                <button id="mic-mat" onclick="toggleDiktovani('material-rucni')" class="absolute right-3 top-2.5 w-10 h-10 bg-slate-800 rounded-2xl flex items-center justify-center text-xl transition-all">🎙️</button>
             </div>
 
             <button onclick="ulozZaznam()" class="w-full bg-gradient-to-r from-sky-600 to-blue-700 py-4 rounded-3xl font-black text-xs uppercase tracking-widest shadow-xl active:scale-95 transition-all">Uložit do deníku</button>
@@ -72,15 +71,15 @@
             <div class="space-y-3">
                 <input type="text" id="ai-cislo-an" placeholder="Číslo AN pro tento měsíc" class="w-full bg-slate-900 border border-slate-700 p-4 rounded-2xl text-xs font-bold text-amber-100 outline-none">
                 
-                <div class="bg-black/30 p-4 rounded-2xl border border-white/5 space-y-4">
-                    <p class="text-[9px] font-bold text-slate-500 uppercase text-center">🛠️ Kalibrace trefy do linek</p>
+                <div class="bg-black/30 p-4 rounded-2xl border border-white/5 space-y-4 text-center">
+                    <p class="text-[9px] font-bold text-slate-500 uppercase">🛠️ Kalibrace trefy do linek</p>
                     <div class="flex items-center justify-between px-4">
-                        <button onclick="posun(-2)" class="w-10 h-10 glass rounded-full flex items-center justify-center text-xl">⬇️</button>
-                        <div class="text-center">
+                        <button onclick="posun(-2)" class="w-10 h-10 glass rounded-full text-xl flex items-center justify-center">⬇️</button>
+                        <div>
                             <span class="text-[8px] opacity-40 block mb-1 uppercase">Výška (Y)</span>
                             <span id="val-y" class="font-digital text-sky-400">512</span>
                         </div>
-                        <button onclick="posun(2)" class="w-10 h-10 glass rounded-full flex items-center justify-center text-xl">⬆️</button>
+                        <button onclick="posun(2)" class="w-10 h-10 glass rounded-full text-xl flex items-center justify-center">⬆️</button>
                     </div>
                 </div>
 
@@ -128,7 +127,7 @@
         function vykresliDenik() {
             const db = JSON.parse(localStorage.getItem('kamil_denik_db') || "[]");
             document.getElementById('seznam-zaznamu').innerHTML = db.slice(-5).reverse().map((z, i) => `
-                <div class="glass p-4 rounded-3xl border border-white/5 flex justify-between items-center">
+                <div class="glass p-4 rounded-3xl border border-white/5 flex justify-between items-center shadow-lg">
                     <div class="text-[10px]">
                         <span class="text-sky-400 font-bold">${z.datum.split('-').reverse().join('.')}</span> | ${z.prodejna.split(' ')[0]}<br>
                         <span class="opacity-70">${z.popis}</span>
@@ -138,7 +137,7 @@
             `).join('');
         }
         function smazatZaznam(i) { const db = JSON.parse(localStorage.getItem('kamil_denik_db') || "[]"); db.splice(i, 1); localStorage.setItem('kamil_denik_db', JSON.stringify(db)); location.reload(); }
-        function vymazatCelyDenik() { if(confirm("Opravdu smazat deník?")) { localStorage.removeItem('kamil_denik_db'); location.reload(); } }
+        function vymazatData() { if(confirm("Opravdu smazat deník?")) { localStorage.removeItem('kamil_denik_db'); location.reload(); } }
         function vypocitejStatistiky() { const db = JSON.parse(localStorage.getItem('kamil_denik_db') || "[]"); let m = 0; db.forEach(z => m += z.trvani); document.getElementById('stat-hodiny').innerText = `${Math.floor(m/60)}h ${m%60}m`; }
 
         async function vygenerujAlbertPDF() {
@@ -148,47 +147,44 @@
 
             try {
                 const arrayBuffer = await fetch(base64).then(res => res.arrayBuffer());
-                const { PDFDocument, rgb } = PDFLib;
+                const { PDFDocument, StandardFonts, rgb } = PDFLib;
                 const pdfDoc = await PDFDocument.load(arrayBuffer);
-                pdfDoc.registerFontkit(window.fontkit);
+                const font = await pdfDoc.embedFont(StandardFonts.HelveticaBold); // 👈 TADY JE OPRAVA PÍSMA
                 const page = pdfDoc.getPages()[0];
-                const fontBytes = await fetch('https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.66/fonts/Roboto/Roboto-Bold.ttf').then(res => res.arrayBuffer());
-                const font = await pdfDoc.embedFont(fontBytes);
 
                 const prodejna = document.getElementById('prodejna').value;
                 const mes = new Date().getMonth() + 1;
                 
-                page.drawText(prodejna.split('-')[0].trim(), { x: 155, y: 648, size: 11, font: font });
-                page.drawText(`${mes} / 2026`, { x: 425, y: 648, size: 11, font: font });
+                page.drawText(prodejna.split('-')[0].trim(), { x: 155, y: 648, size: 11, font: font, color: rgb(0,0,0) });
+                page.drawText(`${mes} / 2026`, { x: 425, y: 648, size: 11, font: font, color: rgb(0,0,0) });
 
                 const dny = [7, 14, 21, 28];
                 dny.forEach((den, i) => {
                     let y = currentY - (i * 68);
-                    page.drawText(an, { x: 45, y: y, size: 10, font: font });
-                    page.drawText(`${den}.${mes}.`, { x: 45, y: y - 14, size: 12, font: font });
+                    page.drawText(an, { x: 45, y: y, size: 10, font: font, color: rgb(0,0,0) });
+                    page.drawText(`${den}.${mes}.`, { x: 45, y: y - 14, size: 12, font: font, color: rgb(0,0,0) });
                     
-                    page.drawText("kontrola teh.", { x: 188, y: y, size: 11, font: font });
-                    page.drawText("1,0h", { x: 518, y: y, size: 12, font: font });
+                    page.drawText("kontrola teh.", { x: 188, y: y, size: 11, font: font, color: rgb(0,0,0) });
+                    page.drawText("1,0h", { x: 518, y: y, size: 12, font: font, color: rgb(0,0,0) });
 
                     let y2 = y - 14;
-                    if(i === 2) { page.drawText("odečty energií", { x: 188, y: y2, size: 11, font: font }); y2 -= 14; }
+                    if(i === 2) { page.drawText("odečty energií", { x: 188, y: y2, size: 11, font: font, color: rgb(0,0,0) }); y2 -= 14; }
                     
-                    page.drawText(P_U[i % P_U.length], { x: 188, y: y2, size: 11, font: font });
-                    page.drawText("Spoj. mat", { x: 395, y: y2, size: 10, font: font });
-                    page.drawText("3,0h", { x: 518, y: y2, size: 12, font: font });
+                    page.drawText(P_U[i % P_U.length], { x: 188, y: y2, size: 11, font: font, color: rgb(0,0,0) });
+                    page.drawText("Spoj. mat", { x: 395, y: y2, size: 10, font: font, color: rgb(0,0,0) });
+                    page.drawText("3,0h", { x: 518, y: y2, size: 12, font: font, color: rgb(0,0,0) });
                 });
 
                 const pdfBytes = await pdfDoc.save();
                 const link = document.createElement('a'); link.href = URL.createObjectURL(new Blob([pdfBytes], { type: 'application/pdf' })); link.download = `Vykaz_${prodejna}.pdf`; link.click();
                 btn.innerText = "✅ Hotovo"; setTimeout(() => btn.innerText = "Sestavit a stáhnout PDF", 3000);
-            } catch (e) { alert(e.message); btn.innerText = "Chyba!"; }
+            } catch (e) { alert("CHYBA: " + e.message); btn.innerText = "Chyba!"; }
         }
         
         function najdiMojiPolohu() {
             if (navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition(pos => {
-                    alert("📍 Poloha zaměřena (Aplikace vybere nejbližší barák)");
-                    // Zde by byla logika pro výpočet nejbližší prodejny podle GPS
+                    alert("📍 Poloha zaměřena!");
                 });
             }
         }
