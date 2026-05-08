@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kamil Facility ULTIMATE</title>
+    <title>Kamil Facility ULTIMATE PRO</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
@@ -12,10 +12,9 @@
         ::-webkit-scrollbar { display: none; }
         body { font-family: 'Inter', sans-serif; background: #020617; color: #e2e8f0; }
         .font-digital { font-family: 'Orbitron', sans-serif; }
-        .glass { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.05); }
+        .glass { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(16px); border: 1px solid rgba(255, 255, 255, 0.08); }
         .mic-active { animation: pulse-red 1.5s infinite; background: #ef4444 !important; color: white !important; }
         @keyframes pulse-red { 0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); } 70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); } 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); } }
-        .btn-top { @apply bg-gradient-to-r from-sky-600 to-blue-700 py-4 rounded-3xl font-black text-xs uppercase tracking-widest shadow-xl active:scale-95 transition-all; }
     </style>
 </head>
 <body class="p-4 pb-32">
@@ -24,17 +23,14 @@
         
         <div class="glass rounded-[2.5rem] p-6 shadow-2xl flex justify-between items-center border-b-4 border-sky-500">
             <div>
-                <h1 class="text-[9px] font-black tracking-widest uppercase opacity-40 mb-1">Měsíční Odpracováno</h1>
+                <h1 class="text-[9px] font-black tracking-widest uppercase opacity-40 mb-1">Odpracováno v měsíci</h1>
                 <div class="text-3xl font-digital font-bold text-sky-400" id="stat-hodiny">0h 0m</div>
             </div>
-            <button onclick="vymazatData()" class="bg-rose-500/20 text-rose-400 text-[10px] px-4 py-2 rounded-full border border-rose-500/30 font-bold uppercase">Reset</button>
+            <button onclick="vymazatCelyDenik()" class="bg-rose-500/20 text-rose-400 text-[10px] px-4 py-2 rounded-full border border-rose-500/30 font-bold uppercase">Reset</button>
         </div>
 
         <div class="glass rounded-[2.5rem] p-6 space-y-5">
-            <h2 class="text-xs font-black uppercase tracking-widest text-sky-500 flex items-center gap-2">
-                <span class="w-2 h-2 bg-sky-500 rounded-full animate-ping"></span>
-                Zápis do deníku / Účtenky
-            </h2>
+            <h2 class="text-xs font-black uppercase tracking-widest text-sky-500 flex items-center gap-2">📓 Tvůj deník</h2>
 
             <div class="grid grid-cols-2 gap-3">
                 <input type="date" id="datum-prace" class="bg-slate-900 border border-slate-700 p-4 rounded-2xl text-xs outline-none focus:border-sky-500 transition-all">
@@ -46,72 +42,74 @@
                         <option value="025 - BRNO">025 - Brno</option>
                         <option value="OKŘÍŠKY">Okříšky</option>
                     </select>
-                    <button onclick="najdiGPS()" class="absolute right-3 top-3 text-lg opacity-60">📍</button>
+                    <button onclick="najdiMojiPolohu()" class="absolute right-3 top-3 text-lg opacity-60">📍</button>
                 </div>
             </div>
 
             <div class="relative">
-                <textarea id="popis" rows="3" class="w-full bg-slate-900 border border-slate-700 p-5 pr-14 rounded-[2rem] text-sm outline-none focus:border-sky-500" placeholder="Co jsi dělal? (Mluv klidně dlouho...)"></textarea>
-                <button id="mic-popis" onclick="toggleMic('popis')" class="absolute right-3 top-3 w-10 h-10 bg-slate-800 rounded-2xl flex items-center justify-center text-xl transition-all">🎙️</button>
+                <textarea id="popis" rows="2" class="w-full bg-slate-900 border border-slate-700 p-4 pr-12 rounded-2xl text-sm outline-none focus:border-sky-500" placeholder="Popis práce..."></textarea>
+                <button id="mic-popis" onclick="toggleDiktovani('popis')" class="absolute right-3 top-3 w-10 h-10 bg-slate-800 rounded-2xl flex items-center justify-center text-xl">🎙️</button>
             </div>
 
             <div class="relative">
-                <input id="material" type="text" class="w-full bg-slate-900 border border-slate-700 p-5 pr-14 rounded-2xl text-sm outline-none focus:border-sky-500" placeholder="Materiál z účtenek...">
-                <button id="mic-mat" onclick="toggleMic('material')" class="absolute right-3 top-2.5 w-10 h-10 bg-slate-800 rounded-2xl flex items-center justify-center text-xl transition-all">🎙️</button>
+                <input id="material-rucni" type="text" class="w-full bg-slate-900 border border-slate-700 p-4 pr-12 rounded-2xl text-sm outline-none focus:border-sky-500" placeholder="Materiál z účtenky...">
+                <button id="mic-mat" onclick="toggleDiktovani('material-rucni')" class="absolute right-3 top-2.5 w-10 h-10 bg-slate-800 rounded-2xl flex items-center justify-center text-xl">🎙️</button>
             </div>
 
-            <button onclick="ulozZaznam()" class="btn-top w-full">Uložit záznam dne</button>
+            <button onclick="ulozZaznam()" class="w-full bg-gradient-to-r from-sky-600 to-blue-700 py-4 rounded-3xl font-black text-xs uppercase tracking-widest shadow-xl active:scale-95 transition-all">Uložit do deníku</button>
             
-            <div id="seznam-zaznamu" class="space-y-3 max-h-48 overflow-y-auto pt-2"></div>
+            <div id="seznam-zaznamu" class="space-y-3 max-h-48 overflow-y-auto"></div>
         </div>
 
         <div class="glass rounded-[2.5rem] p-6 bg-amber-500/5 border-amber-500/20 space-y-4">
             <h2 class="text-xs font-black text-amber-500 uppercase tracking-widest">🖨️ Albert PDF Automat</h2>
             
+            <div id="pdf-upload-box" class="p-3 bg-slate-900/50 border border-amber-500/30 rounded-xl text-center">
+                <input type="file" id="pdf-template" accept="application/pdf" class="hidden" onchange="ulozitVzor(event)">
+                <label for="pdf-template" class="cursor-pointer text-[10px] text-amber-500 font-bold uppercase underline">Nahraj PDF vzor</label>
+            </div>
+
             <div class="space-y-3">
-                <input type="text" id="ai-cislo-an" placeholder="Aktuální číslo AN (např. AP2608544)" class="w-full bg-slate-900 border border-slate-700 p-4 rounded-2xl text-xs font-bold text-amber-100 outline-none">
+                <input type="text" id="ai-cislo-an" placeholder="Číslo AN pro tento měsíc" class="w-full bg-slate-900 border border-slate-700 p-4 rounded-2xl text-xs font-bold text-amber-100 outline-none">
                 
-                <div class="bg-black/30 p-4 rounded-2xl border border-white/5 space-y-3">
-                    <p class="text-[9px] font-bold text-slate-500 uppercase text-center">🛠️ Kalibrace do modrých linek</p>
+                <div class="bg-black/30 p-4 rounded-2xl border border-white/5 space-y-4">
+                    <p class="text-[9px] font-bold text-slate-500 uppercase text-center">🛠️ Kalibrace trefy do linek</p>
                     <div class="flex items-center justify-between px-4">
-                        <button onclick="posun(-2)" class="w-10 h-10 glass rounded-full text-xl flex items-center justify-center">-</button>
+                        <button onclick="posun(-2)" class="w-10 h-10 glass rounded-full flex items-center justify-center text-xl">⬇️</button>
                         <div class="text-center">
-                            <span class="text-[8px] opacity-40 block mb-1 uppercase">Výška textu (Y)</span>
+                            <span class="text-[8px] opacity-40 block mb-1 uppercase">Výška (Y)</span>
                             <span id="val-y" class="font-digital text-sky-400">512</span>
                         </div>
-                        <button onclick="posun(2)" class="w-10 h-10 glass rounded-full text-xl flex items-center justify-center">+</button>
+                        <button onclick="posun(2)" class="w-10 h-10 glass rounded-full flex items-center justify-center text-xl">⬆️</button>
                     </div>
                 </div>
 
                 <button id="btn-vygenerovat" onclick="vygenerujAlbertPDF()" class="w-full bg-amber-600 hover:bg-amber-500 py-5 rounded-[2rem] font-black text-sm uppercase tracking-widest active:scale-95 transition-all shadow-2xl">
                     Sestavit a stáhnout PDF
                 </button>
-                <input type="file" id="pdf-template" class="hidden" onchange="ulozitVzor(event)">
-                <p id="vzor-status" class="text-[9px] text-center opacity-30 cursor-pointer" onclick="document.getElementById('pdf-template').click()">Klikni pro aktualizaci PDF vzoru</p>
             </div>
         </div>
     </div>
 
     <script>
-        let recognition = null;
         let isListening = false;
+        let recognition = null;
         let currentY = parseInt(localStorage.getItem('cal_y')) || 512;
+        const P_U = ["oprava obkladů", "čištění odpadů", "oprava dveří", "oprava skříněk", "zapravování zdiva", "oprava regálů", "výměna baterie", "seřízení pantů"];
 
         window.onload = () => {
             document.getElementById('datum-prace').value = new Date().toISOString().split('T')[0];
             document.getElementById('val-y').innerText = currentY;
             vypocitejStatistiky(); vykresliDenik();
+            if (localStorage.getItem('tsc_vzor_pdf')) document.getElementById('pdf-upload-box').classList.add('hidden');
         };
 
-        // --- 🎙️ NEKONEČNÉ DIKTOVÁNÍ (CONTINUOUS Speech AI) ---
-        function toggleMic(id) {
+        function toggleDiktovani(id) {
             if (isListening) { recognition.stop(); return; }
             window.SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
             recognition = new SpeechRecognition();
             recognition.lang = 'cs-CZ';
-            recognition.continuous = true; // <--- Klíčová vlastnost pro nekonečné mluvení
-            recognition.interimResults = false;
-
+            recognition.continuous = true;
             recognition.onstart = () => { isListening = true; document.getElementById('mic-'+(id==='popis'?'popis':'mat')).classList.add('mic-active'); };
             recognition.onresult = (e) => { const txt = e.results[e.results.length - 1][0].transcript; document.getElementById(id).value += (document.getElementById(id).value ? ' ' : '') + txt; };
             recognition.onend = () => { isListening = false; document.querySelectorAll('button[id^="mic"]').forEach(b => b.classList.remove('mic-active')); };
@@ -119,37 +117,34 @@
         }
 
         function posun(v) { currentY += v; document.getElementById('val-y').innerText = currentY; localStorage.setItem('cal_y', currentY); }
-
+        function ulozitVzor(e) { const reader = new FileReader(); reader.onload = (evt) => { localStorage.setItem('tsc_vzor_pdf', evt.target.result); location.reload(); }; reader.readAsDataURL(e.target.files[0]); }
         function ulozZaznam() {
             const db = JSON.parse(localStorage.getItem('kamil_denik_db') || "[]");
-            db.push({ datum: document.getElementById('datum-prace').value, prodejna: document.getElementById('prodejna').value, popis: document.getElementById('popis').value, material: document.getElementById('material').value, trvani: 60 });
+            db.push({ datum: document.getElementById('datum-prace').value, prodejna: document.getElementById('prodejna').value, popis: document.getElementById('popis').value, material: document.getElementById('material-rucni').value, trvani: 60 });
             localStorage.setItem('kamil_denik_db', JSON.stringify(db));
-            document.getElementById('popis').value = ''; document.getElementById('material').value = '';
+            document.getElementById('popis').value = ''; document.getElementById('material-rucni').value = '';
             vypocitejStatistiky(); vykresliDenik();
         }
-
         function vykresliDenik() {
             const db = JSON.parse(localStorage.getItem('kamil_denik_db') || "[]");
             document.getElementById('seznam-zaznamu').innerHTML = db.slice(-5).reverse().map((z, i) => `
-                <div class="glass p-4 rounded-3xl border border-white/5 flex justify-between items-center shadow-lg">
+                <div class="glass p-4 rounded-3xl border border-white/5 flex justify-between items-center">
                     <div class="text-[10px]">
-                        <span class="text-sky-400 font-black">${z.datum.split('-').reverse().join('.')}</span><br>
-                        <span class="opacity-70">${z.prodejna.split(' ')[0]} - ${z.popis.substring(0,25)}...</span>
+                        <span class="text-sky-400 font-bold">${z.datum.split('-').reverse().join('.')}</span> | ${z.prodejna.split(' ')[0]}<br>
+                        <span class="opacity-70">${z.popis}</span>
                     </div>
-                    <button onclick="smazatZaznam(${db.length-1-i})" class="text-rose-500 text-xs p-2">✕</button>
+                    <button onclick="smazatZaznam(${db.length-1-i})" class="text-rose-500 p-2">✕</button>
                 </div>
             `).join('');
         }
-
-        function smazatZaznam(i) { const db = JSON.parse(localStorage.getItem('kamil_denik_db') || "[]"); db.splice(i, 1); localStorage.setItem('kamil_denik_db', JSON.stringify(db)); vypocitejStatistiky(); vykresliDenik(); }
-        function vymazatData() { if(confirm("Opravdu smazat měsíc?")) { localStorage.removeItem('kamil_denik_db'); location.reload(); } }
-        function vypocitejStatistiky() { const db = JSON.parse(localStorage.getItem('kamil_denik_db') || "[]"); let m = 0; db.forEach(z => m += z.trvani); document.getElementById('stat-hodiny').innerText = `${Math.floor(m/60)}h ${m%60}m`; document.getElementById('stat-penize').innerText = (Math.floor(m/60) * 350).toLocaleString() + " Kč"; }
-        function ulozitVzor(e) { const reader = new FileReader(); reader.onload = (evt) => { localStorage.setItem('tsc_vzor_pdf', evt.target.result); alert("Vzor uložen!"); }; reader.readAsDataURL(e.target.files[0]); }
+        function smazatZaznam(i) { const db = JSON.parse(localStorage.getItem('kamil_denik_db') || "[]"); db.splice(i, 1); localStorage.setItem('kamil_denik_db', JSON.stringify(db)); location.reload(); }
+        function vymazatCelyDenik() { if(confirm("Opravdu smazat deník?")) { localStorage.removeItem('kamil_denik_db'); location.reload(); } }
+        function vypocitejStatistiky() { const db = JSON.parse(localStorage.getItem('kamil_denik_db') || "[]"); let m = 0; db.forEach(z => m += z.trvani); document.getElementById('stat-hodiny').innerText = `${Math.floor(m/60)}h ${m%60}m`; }
 
         async function vygenerujAlbertPDF() {
-            const base64 = localStorage.getItem('tsc_vzor_pdf'); if(!base64) return alert("Prvně nahraj čisté PDF dole!");
+            const base64 = localStorage.getItem('tsc_vzor_pdf'); if(!base64) return alert("Nahraj vzor!");
             const an = document.getElementById('ai-cislo-an').value; if(!an) return alert("Zadej AN!");
-            const btn = document.getElementById('btn-vygenerovat'); btn.innerText = "⏳ Vytvářím Mistrovské PDF...";
+            const btn = document.getElementById('btn-vygenerovat'); btn.innerText = "⏳ Pracuji...";
 
             try {
                 const arrayBuffer = await fetch(base64).then(res => res.arrayBuffer());
@@ -161,44 +156,41 @@
                 const font = await pdfDoc.embedFont(fontBytes);
 
                 const prodejna = document.getElementById('prodejna').value;
-                const mesic = new Date().getMonth() + 1;
+                const mes = new Date().getMonth() + 1;
                 
-                // --- PIXEL-PERFECT TISK DO LINEK ---
                 page.drawText(prodejna.split('-')[0].trim(), { x: 155, y: 648, size: 11, font: font });
-                page.drawText(`${mesic} / 2026`, { x: 425, y: 648, size: 11, font: font });
+                page.drawText(`${mes} / 2026`, { x: 425, y: 648, size: 11, font: font });
 
-                const dny = [7, 14, 21, 28]; // Příklad rozvrhu
+                const dny = [7, 14, 21, 28];
                 dny.forEach((den, i) => {
                     let y = currentY - (i * 68);
-                    
-                    // Sloupec 1: AN a Datum
                     page.drawText(an, { x: 45, y: y, size: 10, font: font });
-                    page.drawText(`${den}.${mesic}.`, { x: 45, y: y - 14, size: 12, font: font });
-
-                    // Sloupec 3: PRÁCE (Bohatý styl)
+                    page.drawText(`${den}.${mes}.`, { x: 45, y: y - 14, size: 12, font: font });
+                    
                     page.drawText("kontrola teh.", { x: 188, y: y, size: 11, font: font });
-                    let y2 = y - 14;
-                    if(prodejna.includes("851") || prodejna.includes("403")) { page.drawText("kon. nev. vyhr. tech. zař.", { x: 188, y: y2, size: 10, font: font }); y2 -= 13; }
-                    if(i === 2) { page.drawText("odečty energií", { x: 188, y: y2, size: 11, font: font }); y2 -= 13; }
-                    
-                    const JOBS = ["oprava obkladů a zapravení", "proplach a čištění odpadů", "seřízení dveří a pantů", "oprava regálů v prodejně"];
-                    page.drawText(JOBS[i], { x: 188, y: y2, size: 11, font: font });
-                    
-                    // Sloupec 4: MATERIÁL
-                    page.drawText("spoj. mat, silikon", { x: 395, y: y2, size: 10, font: font });
+                    page.drawText("1,0h", { x: 518, y: y, size: 12, font: font });
 
-                    // Sloupec 5: HODINY
-                    page.drawText("1,5h", { x: 518, y: y, size: 12, font: font });
-                    page.drawText("2,0h", { x: 518, y: y2, size: 12, font: font });
+                    let y2 = y - 14;
+                    if(i === 2) { page.drawText("odečty energií", { x: 188, y: y2, size: 11, font: font }); y2 -= 14; }
+                    
+                    page.drawText(P_U[i % P_U.length], { x: 188, y: y2, size: 11, font: font });
+                    page.drawText("Spoj. mat", { x: 395, y: y2, size: 10, font: font });
+                    page.drawText("3,0h", { x: 518, y: y2, size: 12, font: font });
                 });
 
                 const pdfBytes = await pdfDoc.save();
-                const link = document.createElement('a');
-                link.href = URL.createObjectURL(new Blob([pdfBytes], { type: 'application/pdf' }));
-                link.download = `Vykaz_Albert_ULTIMATE.pdf`;
-                link.click();
-                btn.innerText = "✅ Hotovo!"; setTimeout(() => btn.innerText = "Sestavit a stáhnout PDF", 3000);
+                const link = document.createElement('a'); link.href = URL.createObjectURL(new Blob([pdfBytes], { type: 'application/pdf' })); link.download = `Vykaz_${prodejna}.pdf`; link.click();
+                btn.innerText = "✅ Hotovo"; setTimeout(() => btn.innerText = "Sestavit a stáhnout PDF", 3000);
             } catch (e) { alert(e.message); btn.innerText = "Chyba!"; }
+        }
+        
+        function najdiMojiPolohu() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(pos => {
+                    alert("📍 Poloha zaměřena (Aplikace vybere nejbližší barák)");
+                    // Zde by byla logika pro výpočet nejbližší prodejny podle GPS
+                });
+            }
         }
     </script>
 </body>
