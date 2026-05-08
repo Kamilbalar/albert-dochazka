@@ -3,10 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kamil Facility ULTIMATE PRO</title>
+    <title>Kamil Facility ULTIMATE FIX</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+    <script src="https://unpkg.com/@pdf-lib/fontkit/dist/fontkit.umd.min.js"></script>
     <style>
         ::-webkit-scrollbar { display: none; }
         body { font-family: 'Inter', sans-serif; background: #020617; color: #e2e8f0; }
@@ -22,7 +23,7 @@
         
         <div class="glass rounded-[2.5rem] p-6 shadow-2xl flex justify-between items-center border-b-4 border-sky-500">
             <div>
-                <h1 class="text-[9px] font-black tracking-widest uppercase opacity-40 mb-1">Měsíční Odpracováno</h1>
+                <h1 class="text-[9px] font-black tracking-widest uppercase opacity-40 mb-1">Měsíční Status</h1>
                 <div class="text-3xl font-digital font-bold text-sky-400" id="stat-hodiny">0h 0m</div>
             </div>
             <button onclick="vymazatData()" class="bg-rose-500/20 text-rose-400 text-[10px] px-4 py-2 rounded-full border border-rose-500/30 font-bold uppercase">Reset</button>
@@ -57,7 +58,7 @@
 
             <button onclick="ulozZaznam()" class="w-full bg-gradient-to-r from-sky-600 to-blue-700 py-4 rounded-3xl font-black text-xs uppercase tracking-widest shadow-xl active:scale-95 transition-all">Uložit do deníku</button>
             
-            <div id="seznam-zaznamu" class="space-y-3 max-h-48 overflow-y-auto"></div>
+            <div id="seznam-zaznamu" class="space-y-3 max-h-48 overflow-y-auto pt-2"></div>
         </div>
 
         <div class="glass rounded-[2.5rem] p-6 bg-amber-500/5 border-amber-500/20 space-y-4">
@@ -127,7 +128,7 @@
         function vykresliDenik() {
             const db = JSON.parse(localStorage.getItem('kamil_denik_db') || "[]");
             document.getElementById('seznam-zaznamu').innerHTML = db.slice(-5).reverse().map((z, i) => `
-                <div class="glass p-4 rounded-3xl border border-white/5 flex justify-between items-center shadow-lg">
+                <div class="glass p-4 rounded-3xl border border-white/5 flex justify-between items-center">
                     <div class="text-[10px]">
                         <span class="text-sky-400 font-bold">${z.datum.split('-').reverse().join('.')}</span> | ${z.prodejna.split(' ')[0]}<br>
                         <span class="opacity-70">${z.popis}</span>
@@ -147,11 +148,16 @@
 
             try {
                 const arrayBuffer = await fetch(base64).then(res => res.arrayBuffer());
-                const { PDFDocument, StandardFonts, rgb } = PDFLib;
+                const { PDFDocument, rgb } = PDFLib;
                 const pdfDoc = await PDFDocument.load(arrayBuffer);
-                const font = await pdfDoc.embedFont(StandardFonts.HelveticaBold); // 👈 TADY JE OPRAVA PÍSMA
+                
+                // 👈 OPRAVA PÍSMA: Stahujeme písmo, které umí ČEŠTINU a háčky
+                pdfDoc.registerFontkit(window.fontkit);
+                const fontUrl = 'https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.66/fonts/Roboto/Roboto-Bold.ttf';
+                const fontBytes = await fetch(fontUrl).then(res => res.arrayBuffer());
+                const font = await pdfDoc.embedFont(fontBytes);
+                
                 const page = pdfDoc.getPages()[0];
-
                 const prodejna = document.getElementById('prodejna').value;
                 const mes = new Date().getMonth() + 1;
                 
@@ -176,7 +182,7 @@
                 });
 
                 const pdfBytes = await pdfDoc.save();
-                const link = document.createElement('a'); link.href = URL.createObjectURL(new Blob([pdfBytes], { type: 'application/pdf' })); link.download = `Vykaz_${prodejna}.pdf`; link.click();
+                const link = document.createElement('a'); link.href = URL.createObjectURL(new Blob([pdfBytes], { type: 'application/pdf' })); link.download = `Vykaz_${prodejna.split(' ')[0]}.pdf`; link.click();
                 btn.innerText = "✅ Hotovo"; setTimeout(() => btn.innerText = "Sestavit a stáhnout PDF", 3000);
             } catch (e) { alert("CHYBA: " + e.message); btn.innerText = "Chyba!"; }
         }
