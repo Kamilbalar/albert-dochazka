@@ -1,267 +1,292 @@
 <!DOCTYPE html>
-<html lang="sk">
+<html lang="cs">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <meta name="theme-color" content="#000000">
-    <title>OMNI 3.0 ULTRA MAX</title>
+    <meta name="theme-color" content="#030712">
+    <title>Kamil NEON 4.0</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    
     <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
     <script src="https://unpkg.com/tesseract.js@v2.1.0/dist/tesseract.min.js"></script>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/localforage/1.10.0/localforage.min.js"></script>
+
     <style>
         ::-webkit-scrollbar { display: none; }
-        body { font-family: 'Inter', sans-serif; background: #000000; color: #f8fafc; -webkit-tap-highlight-color: transparent; padding-bottom: env(safe-area-inset-bottom); }
+        body { font-family: 'Inter', sans-serif; background: #030712; color: #f8fafc; -webkit-tap-highlight-color: transparent; padding-bottom: env(safe-area-inset-bottom); }
         .font-digital { font-family: 'Orbitron', sans-serif; }
-        .glass { background: rgba(15, 23, 42, 0.4); backdrop-filter: blur(30px); border: 1px solid rgba(255, 255, 255, 0.05); }
-        .neon-border { border: 1px solid rgba(56, 189, 248, 0.3); box-shadow: 0 0 15px rgba(56, 189, 248, 0.1); }
-        .nav-item.active { color: #38bdf8; }
-        .nav-item.active svg { transform: translateY(-3px); filter: drop-shadow(0 0 8px #38bdf8); }
-        .page { display: none; animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
+        
+        /* Moderní sklo a neony */
+        .glass-panel { background: rgba(17, 24, 39, 0.6); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); border: 1px solid rgba(255, 255, 255, 0.05); }
+        .neon-glow { box-shadow: 0 0 20px rgba(56, 189, 248, 0.15); }
+        
+        /* Animace a přechody */
+        .page { display: none; animation: slideIn 0.3s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; opacity: 0; transform: translateY(15px); }
         .page.active { display: block; }
-        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-        .radar-active { animation: pulse-green 2s infinite; }
-        @keyframes pulse-green { 0% { box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.4); } 70% { box-shadow: 0 0 0 20px rgba(52, 211, 153, 0); } 100% { box-shadow: 0 0 0 0 rgba(52, 211, 153, 0); } }
-        .btn-gradient { background: linear-gradient(135deg, #0ea5e9 0%, #6366f1 100%); }
+        @keyframes slideIn { to { opacity: 1; transform: translateY(0); } }
+        
+        /* Navigace */
+        .nav-item { color: #475569; transition: all 0.3s ease; }
+        .nav-item.active { color: #38bdf8; transform: translateY(-4px); filter: drop-shadow(0 0 10px rgba(56, 189, 248, 0.5)); }
+        
+        /* Vizuální Radar */
+        .radar-box { position: relative; width: 60px; height: 60px; border-radius: 50%; border: 2px solid rgba(52, 211, 153, 0.2); overflow: hidden; }
+        .radar-sweep { position: absolute; top: 0; left: 50%; width: 50%; height: 50%; background: linear-gradient(90deg, rgba(52,211,153,0) 0%, rgba(52,211,153,0.5) 100%); transform-origin: bottom left; animation: sweep 2s linear infinite; }
+        @keyframes sweep { to { transform: rotate(360deg); } }
+        
+        /* Krásná tlačítka */
+        .btn-neon { background: linear-gradient(135deg, #0284c7 0%, #3b82f6 100%); transition: all 0.2s; }
+        .btn-neon:active { transform: scale(0.95); box-shadow: 0 0 15px rgba(56, 189, 248, 0.4); }
     </style>
 </head>
-<body class="m-0 p-0 overflow-x-hidden text-sm">
+<body class="m-0 p-0 overflow-x-hidden">
 
     <div id="toast-container" class="fixed top-10 left-0 right-0 z-50 flex flex-col items-center space-y-2 p-4 pointer-events-none"></div>
 
-    <main id="main-content" class="p-4 pb-28 pt-6">
+    <main id="main-content" class="p-4 pb-32 pt-6">
 
         <div id="page-dashboard" class="page active space-y-5">
-            <div class="glass rounded-[2.5rem] p-6 relative overflow-hidden neon-border">
-                <div class="absolute -right-20 -top-20 w-64 h-64 bg-sky-500/10 rounded-full blur-[80px]"></div>
-                <div class="relative z-10 flex justify-between items-center">
+            <div class="glass-panel rounded-[2rem] p-6 neon-glow relative overflow-hidden">
+                <div class="absolute -right-16 -top-16 w-48 h-48 bg-sky-500/10 rounded-full blur-[60px]"></div>
+                
+                <div class="flex justify-between items-center mb-6">
                     <div>
-                        <div class="flex items-center gap-2 mb-1">
-                            <span id="gps-indicator" class="w-2.5 h-2.5 bg-emerald-400 rounded-full radar-active"></span>
-                            <span class="text-[10px] font-black tracking-[0.2em] uppercase text-sky-400">JARVIS SENSORS ON</span>
-                        </div>
-                        <div class="text-5xl font-digital font-bold text-white mb-1" id="stat-hodiny">0h</div>
-                        <div class="text-xs text-emerald-400 font-bold" id="stat-penize">0 € Odhad</div>
+                        <div class="text-[10px] font-black tracking-widest uppercase text-slate-500 mb-1">Měsíční skóre</div>
+                        <div class="text-6xl font-digital font-black text-transparent bg-clip-text bg-gradient-to-r from-sky-300 to-indigo-400 drop-shadow-lg" id="stat-hodiny">0h</div>
+                        <div class="text-xs text-emerald-400 font-bold mt-1 tracking-wider" id="stat-penize">0 Kč Odhad</div>
+                    </div>
+                    <div class="radar-box shadow-[0_0_15px_rgba(52,211,153,0.2)]">
+                        <div class="radar-sweep"></div>
+                        <div class="absolute inset-0 flex items-center justify-center"><span class="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></span></div>
                     </div>
                 </div>
             </div>
 
-            <div class="glass rounded-[2.5rem] p-6 border border-slate-800 shadow-xl overflow-hidden relative">
+            <div class="glass-panel rounded-[2rem] p-6 border border-slate-800 shadow-xl">
                 <div id="active-timer-ui" class="hidden text-center space-y-4">
-                    <div class="inline-block px-4 py-1 bg-sky-500/10 rounded-full border border-sky-500/20 text-sky-400 text-[10px] font-black uppercase tracking-widest" id="active-timer-prodejna">---</div>
-                    <div class="text-6xl font-digital text-white tracking-tighter" id="active-timer-clock">00:00:00</div>
-                    <button onclick="spustitNeznicitelneStopky()" class="w-full py-4 bg-rose-600 rounded-2xl text-xs font-black uppercase tracking-widest shadow-lg shadow-rose-900/20 active:scale-95 transition-all">Ukončiť a Zapísať</button>
+                    <div class="inline-block px-4 py-1.5 bg-emerald-500/10 rounded-full border border-emerald-500/30 text-emerald-400 text-[10px] font-black uppercase tracking-widest shadow-[0_0_10px_rgba(52,211,153,0.2)]" id="active-timer-prodejna">---</div>
+                    <div class="text-7xl font-digital text-white tracking-tighter drop-shadow-[0_0_10px_rgba(255,255,255,0.2)]" id="active-timer-clock">00:00:00</div>
+                    <button onclick="spustitNeznicitelneStopky()" class="w-full py-4 bg-gradient-to-r from-rose-600 to-red-500 rounded-2xl text-xs font-black uppercase tracking-widest text-white shadow-[0_0_20px_rgba(225,29,72,0.3)] active:scale-95 transition-transform">⏹️ Ukončit & Zapsat</button>
                 </div>
-                <div id="no-timer-ui" class="py-10 text-center">
-                    <p class="text-slate-500 text-xs font-bold uppercase tracking-[0.2em]">Skenujem okolie...</p>
-                    <p class="text-[10px] text-slate-700 mt-2 italic">Aplikácia sama spustí čas pri príchode k Albertu</p>
+                <div id="no-timer-ui" class="py-8 text-center">
+                    <p class="text-slate-500 text-xs font-bold uppercase tracking-widest">Žádná aktivní práce</p>
+                    <p class="text-[10px] text-slate-600 mt-2">GPS Radar na pozadí čeká na příjezd k Albertu.</p>
                 </div>
             </div>
 
-            <div class="glass rounded-[2.5rem] p-6 border border-slate-800">
-                <h2 class="text-[10px] font-black uppercase text-slate-500 tracking-widest mb-4">Mesačná analýza objektov</h2>
-                <div id="analytika-baraku" class="space-y-2"></div>
+            <div class="glass-panel rounded-[2rem] p-6 border border-slate-800">
+                <h2 class="text-[10px] font-black uppercase text-slate-500 tracking-widest mb-4">Statistika Objektů</h2>
+                <div id="analytika-baraku" class="grid grid-cols-2 gap-2"></div>
             </div>
         </div>
 
         <div id="page-dispecink" class="page space-y-5">
-            <div class="glass rounded-[2.5rem] p-6 border-t-2 border-rose-500/50 space-y-4">
-                <h2 class="text-xs font-black uppercase tracking-widest text-rose-400">🚨 MWDIAS AI Skener</h2>
+            <div class="glass-panel rounded-[2rem] p-6 border-t-2 border-rose-500/40 space-y-4">
+                <h2 class="text-xs font-black uppercase tracking-widest text-rose-400 flex items-center gap-2">
+                    <span>🚨</span> MWDIAS AI Skener
+                </h2>
+                
                 <div class="grid grid-cols-2 gap-3">
-                    <button onclick="document.getElementById('ocr-upload').click()" class="bg-rose-500/10 border border-rose-500/20 py-5 rounded-2xl flex flex-col items-center gap-2">
-                        <svg class="w-6 h-6 text-rose-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path></svg>
-                        <span class="text-[9px] font-bold uppercase text-rose-300">Screenshot</span>
+                    <button onclick="document.getElementById('ocr-upload').click()" class="bg-rose-500/10 border border-rose-500/20 py-4 rounded-2xl flex flex-col items-center gap-1.5 active:scale-95 transition-transform">
+                        <span class="text-xl">📸</span>
+                        <span class="text-[9px] font-bold uppercase text-rose-300">Ze Screenshotu</span>
                         <input type="file" id="ocr-upload" class="hidden" accept="image/*" onchange="skenujObrazek(event)">
                     </button>
-                    <button onclick="document.getElementById('ir-text').focus()" class="bg-slate-800/50 border border-slate-700 py-5 rounded-2xl flex flex-col items-center gap-2">
-                        <svg class="w-6 h-6 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"></path></svg>
-                        <span class="text-[9px] font-bold uppercase text-slate-300">Vložiť Text</span>
+                    <button onclick="document.getElementById('ir-text').focus()" class="bg-slate-800 border border-slate-700 py-4 rounded-2xl flex flex-col items-center gap-1.5 active:scale-95 transition-transform">
+                        <span class="text-xl">✍️</span>
+                        <span class="text-[9px] font-bold uppercase text-slate-300">Vložit Text</span>
                     </button>
                 </div>
-                <textarea id="ir-text" rows="3" class="w-full bg-black/40 border border-slate-800 p-4 rounded-2xl text-xs outline-none focus:border-rose-500 text-slate-200" placeholder="Sem vlož text z portálu..."></textarea>
-                <button onclick="zpracujIR()" class="w-full py-4 btn-gradient rounded-2xl font-black text-xs uppercase text-white shadow-lg">Analyzovať a Plánovať</button>
+                
+                <textarea id="ir-text" rows="3" class="w-full bg-[#0a0f1c] border border-slate-700 p-4 rounded-2xl text-xs outline-none focus:border-rose-500 text-slate-200 shadow-inner placeholder-slate-600" placeholder="Sem vlož text tiketu z portálu..."></textarea>
+                
+                <button onclick="zpracujIR()" class="w-full py-4 bg-gradient-to-r from-rose-600 to-pink-600 rounded-2xl font-black text-xs uppercase text-white shadow-[0_0_15px_rgba(225,29,72,0.3)] active:scale-95 transition-transform">Analyzovat Úkol</button>
             </div>
-            <div id="seznam-ir" class="space-y-4"></div>
+            
+            <div id="seznam-ir" class="space-y-3"></div>
         </div>
 
         <div id="page-denik" class="page space-y-5">
-            <div class="glass rounded-[2.5rem] p-6 border-t-2 border-sky-500/50 space-y-5">
-                <h2 class="text-xs font-black uppercase tracking-widest text-sky-400">📓 Digitálny Denník</h2>
+            <div class="glass-panel rounded-[2rem] p-6 border-t-2 border-emerald-500/40 space-y-4">
+                <h2 class="text-xs font-black uppercase tracking-widest text-emerald-400">📓 Pracovní Deník</h2>
+                
                 <div class="grid grid-cols-2 gap-3">
-                    <input type="date" id="datum-prace" class="bg-black/40 border border-slate-800 p-4 rounded-xl text-xs text-white outline-none">
-                    <select id="prodejna" onchange="nahrajAN()" class="bg-black/40 border border-slate-800 p-4 rounded-xl text-xs font-bold text-white outline-none">
+                    <input type="date" id="datum-prace" class="bg-[#0a0f1c] border border-slate-700 p-4 rounded-xl text-xs text-white outline-none focus:border-emerald-500">
+                    <select id="prodejna" onchange="nahrajAN()" class="bg-[#0a0f1c] border border-slate-700 p-4 rounded-xl text-xs font-bold text-white outline-none focus:border-emerald-500">
                         <option value="171 - TŘEBÍČ">171 - Třebíč</option><option value="851 - TŘEBÍČ">851 - Třebíč</option><option value="403 - TŘEBÍČ">403 - Třebíč</option>
                         <option value="025 - BRNO">025 - Brno</option><option value="125 - ROSICE">125 - Rosice</option><option value="OKŘÍŠKY">Okříšky</option>
                     </select>
                 </div>
-                <div class="relative">
-                    <textarea id="popis" rows="3" class="w-full bg-black/40 border border-slate-800 p-4 pr-12 rounded-2xl text-sm outline-none focus:border-sky-500 text-slate-200" placeholder="Popis práce..."></textarea>
-                    <button onclick="toggleDiktovani('popis')" class="absolute right-2 top-2 w-12 h-12 bg-slate-800 rounded-xl flex items-center justify-center text-2xl active:scale-90 transition-all">🎙️</button>
+                
+                <div class="flex flex-wrap gap-2 pt-1">
+                    <button onclick="rychloZapis('Oprava dlažby a obkladů', 'lepidlo, silikon')" class="bg-slate-800 px-3 py-1.5 rounded-lg text-[10px] font-bold text-slate-300 border border-slate-700 active:bg-slate-700">🧱 Dlažba</button>
+                    <button onclick="rychloZapis('Čištění odpadů', 'čistič, těsnění')" class="bg-slate-800 px-3 py-1.5 rounded-lg text-[10px] font-bold text-slate-300 border border-slate-700 active:bg-slate-700">💧 Odpad</button>
+                    <button onclick="rychloZapis('Seřízení pantů dveří', 'mazivo, vruty')" class="bg-slate-800 px-3 py-1.5 rounded-lg text-[10px] font-bold text-slate-300 border border-slate-700 active:bg-slate-700">🚪 Dveře</button>
                 </div>
-                <input id="material" type="text" class="w-full bg-black/40 border border-slate-800 p-4 rounded-xl text-sm outline-none text-emerald-400" placeholder="Materiál (AI doplní)...">
-                <button onclick="ulozZaznam_Manualni()" class="w-full py-4 btn-gradient rounded-2xl font-black text-xs uppercase text-white shadow-lg">Uložiť Manuálne</button>
+                
+                <div class="relative">
+                    <textarea id="popis" rows="3" oninput="ulozDraft(); aiDetekceMaterialu();" class="w-full bg-[#0a0f1c] border border-slate-700 p-4 pr-12 rounded-2xl text-sm outline-none focus:border-sky-500 text-slate-200 placeholder-slate-600" placeholder="Co jsi dělal?"></textarea>
+                    <button onclick="toggleDiktovani('popis')" class="absolute right-2 top-2 w-12 h-12 bg-slate-800 rounded-xl flex items-center justify-center text-xl active:scale-90 transition-transform">🎙️</button>
+                </div>
+                
+                <input id="material" type="text" oninput="ulozDraft()" class="w-full bg-[#0a0f1c] border border-emerald-900/50 p-4 rounded-xl text-sm outline-none focus:border-emerald-500 text-emerald-400 placeholder-emerald-900" placeholder="Materiál (Doplní se sám)...">
+                
+                <div class="flex gap-3 pt-2">
+                    <button onclick="ulozZaznam_Manualni()" class="flex-1 bg-slate-800 py-4 rounded-2xl font-bold text-[10px] uppercase text-slate-300 active:scale-95 transition-transform">Zapsat Ručně</button>
+                    <button onclick="spustitNeznicitelneStopky()" id="btn-stopky" class="flex-[2] btn-neon py-4 rounded-2xl font-black text-xs uppercase text-white shadow-[0_0_15px_rgba(56,189,248,0.3)] active:scale-95 transition-transform">⏱️ ZAPNOUT STOPKY</button>
+                </div>
             </div>
-            <div id="seznam-zaznamu" class="space-y-3"></div>
+            
+            <div id="seznam-zaznamu" class="space-y-3 pb-4"></div>
         </div>
 
         <div id="page-nastaveni" class="page space-y-5">
-            <div class="glass rounded-[2.5rem] p-6 bg-amber-500/5 border border-amber-500/20 space-y-4">
-                <h2 class="text-xs font-black text-amber-500 uppercase tracking-widest">🖨️ PDF Generátor</h2>
-                <input type="file" id="pdf-template" accept="application/pdf" class="hidden" onchange="ulozitVzor(event)">
-                <label for="pdf-template" id="vzor-label" class="cursor-pointer block text-center p-4 bg-black/40 border-2 border-dashed border-amber-500/30 rounded-2xl text-[10px] text-amber-500 uppercase font-bold">Nahrať Vzor PDF</label>
-                <div class="flex gap-2">
-                    <input type="text" id="ai-cislo-an" onchange="ulozAN()" placeholder="Číslo AH (Ap...)" class="flex-1 bg-black/40 border border-slate-800 p-4 rounded-xl text-sm font-bold text-amber-100 outline-none">
-                    <select id="gen-mesic" class="bg-black/40 border border-slate-800 p-4 rounded-xl text-sm font-bold text-amber-100 w-20 text-center outline-none"></select>
+            <div class="glass-panel rounded-[2rem] p-6 bg-amber-500/5 border border-amber-500/20 space-y-4 relative overflow-hidden">
+                <div class="absolute -right-10 -top-10 w-32 h-32 bg-amber-500/10 rounded-full blur-3xl"></div>
+                <h2 class="text-xs font-black text-amber-500 uppercase tracking-widest relative z-10">🖨️ PDF Automat</h2>
+                
+                <input type="file" id="pdf-template" accept="application/pdf" class="hidden" onchange="ulozitVzorDoDatabaze(event)">
+                <label for="pdf-template" id="vzor-label" class="cursor-pointer block text-center p-4 bg-[#0a0f1c] border-2 border-dashed border-amber-500/40 rounded-2xl text-[10px] text-amber-500 uppercase font-bold relative z-10 active:scale-95 transition-transform">Nahraj čistý PDF Vzor</label>
+                
+                <div class="flex gap-2 relative z-10">
+                    <input type="text" id="ai-cislo-an" onchange="ulozAN()" placeholder="Číslo AH (Ap...)" class="flex-1 bg-[#0a0f1c] border border-slate-700 p-4 rounded-xl text-sm font-bold text-amber-100 outline-none focus:border-amber-500">
+                    <select id="gen-mesic" class="bg-[#0a0f1c] border border-slate-700 p-4 rounded-xl text-sm font-bold text-amber-100 w-20 text-center outline-none focus:border-amber-500"></select>
                 </div>
-                <button onclick="vygenerujAlbertPDF()" class="w-full py-5 bg-gradient-to-r from-amber-600 to-orange-500 rounded-2xl font-black text-sm uppercase text-white shadow-xl">Vytvoriť a Odoslať PDF</button>
+                
+                <button onclick="vygenerujAlbertPDF()" class="w-full py-5 bg-gradient-to-r from-amber-600 to-orange-500 rounded-2xl font-black text-sm uppercase text-white shadow-[0_0_15px_rgba(245,158,11,0.3)] active:scale-95 transition-transform relative z-10">Sestavit a Poslat PDF</button>
             </div>
-            <div class="glass rounded-[2.5rem] p-6 border border-slate-800 grid grid-cols-2 gap-3">
-                <button onclick="exportCSV()" class="bg-emerald-600/10 py-3 rounded-xl text-[10px] font-bold text-emerald-400 border border-emerald-500/20 uppercase">Export Excel</button>
-                <button onclick="vymazatData()" class="bg-rose-600/10 py-3 rounded-xl text-[10px] font-bold text-rose-400 border border-rose-500/20 uppercase">Vymazať Dáta</button>
+
+            <div class="glass-panel rounded-[2rem] p-6 border border-slate-800 space-y-4">
+                <h2 class="text-xs font-bold uppercase text-slate-500 tracking-widest">Správa Systému</h2>
+                <div class="grid grid-cols-2 gap-3">
+                    <button onclick="exportCSV()" class="bg-emerald-500/10 py-3.5 rounded-xl text-[10px] font-bold text-emerald-400 border border-emerald-500/20 uppercase active:scale-95">📊 Export Excel</button>
+                    <button onclick="vymazatData()" class="bg-rose-500/10 py-3.5 rounded-xl text-[10px] font-bold text-rose-400 border border-rose-500/20 uppercase active:scale-95">🗑️ Reset Měsíce</button>
+                </div>
             </div>
         </div>
     </main>
 
-    <nav class="fixed bottom-0 left-0 right-0 glass border-t border-white/5 z-40 pb-safe">
-        <div class="flex justify-around items-center h-20">
-            <button onclick="switchPage('dashboard')" class="nav-item active flex flex-col items-center gap-1 text-slate-500" id="nav-dashboard">
+    <nav class="fixed bottom-0 left-0 right-0 glass-panel border-t border-white/10 z-40 pb-safe shadow-[0_-10px_40px_rgba(0,0,0,0.5)]">
+        <div class="flex justify-around items-center h-20 px-2">
+            <button onclick="switchPage('dashboard')" class="nav-item active flex flex-col items-center gap-1.5 w-16" id="nav-dashboard">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
                 <span class="text-[8px] font-black uppercase tracking-widest">Radar</span>
             </button>
-            <button onclick="switchPage('dispecink')" class="nav-item flex flex-col items-center gap-1 text-slate-500" id="nav-dispecink">
+            <button onclick="switchPage('dispecink')" class="nav-item flex flex-col items-center gap-1.5 w-16" id="nav-dispecink">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
-                <span class="text-[8px] font-black uppercase tracking-widest">Dispečink</span>
+                <span class="text-[8px] font-black uppercase tracking-widest">Portál</span>
             </button>
-            <button onclick="switchPage('denik')" class="nav-item flex flex-col items-center gap-1 text-slate-500" id="nav-denik">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.246.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.246.477-4.5 1.253"></path></svg>
-                <span class="text-[8px] font-black uppercase tracking-widest">Denník</span>
+            <button onclick="switchPage('denik')" class="nav-item flex flex-col items-center gap-1.5 w-16" id="nav-denik">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                <span class="text-[8px] font-black uppercase tracking-widest">Deník</span>
             </button>
-            <button onclick="switchPage('nastaveni')" class="nav-item flex flex-col items-center gap-1 text-slate-500" id="nav-nastaveni">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-                <span class="text-[8px] font-black uppercase tracking-widest">Výkazy</span>
+            <button onclick="switchPage('nastaveni')" class="nav-item flex flex-col items-center gap-1.5 w-16" id="nav-nastaveni">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
+                <span class="text-[8px] font-black uppercase tracking-widest">Výkaz</span>
             </button>
         </div>
     </nav>
 
     <script>
-        // --- 🤖 JARVIS VOICE CORE ---
-        function mluv(t) { if('speechSynthesis' in window) { let m = new SpeechSynthesisUtterance(t); m.lang = 'cs-CZ'; m.rate = 1.1; window.speechSynthesis.speak(m); } }
+        // --- INICIALIZACE APLIKACE A DATABÁZE ---
+        localforage.config({ name: 'KamilFacilityDB', storeName: 'pdf_storage' });
 
-        let stopkyInterval = null; let zacatekStopek = null; let gpsWatcher = null;
-        const LOKACE = { "171 - TŘEBÍČ": { lat: 49.214, lon: 15.881 }, "851 - TŘEBÍČ": { lat: 49.210, lon: 15.890 }, "403 - TŘEBÍČ": { lat: 49.220, lon: 15.875 }, "025 - BRNO": { lat: 49.195, lon: 16.606 }, "OKŘÍŠKY": { lat: 49.248, lon: 15.768 } };
+        const LOKACE = { "171 - TŘEBÍČ": { lat: 49.214, lon: 15.881 }, "851 - TŘEBÍČ": { lat: 49.210, lon: 15.890 }, "403 - TŘEBÍČ": { lat: 49.220, lon: 15.875 }, "025 - BRNO": { lat: 49.195, lon: 16.606 }, "125 - ROSICE": { lat: 49.182, lon: 16.388 }, "OKŘÍŠKY": { lat: 49.248, lon: 15.768 } };
         const CILY = { "171": { u: 15, t: 4, d: 5 }, "851": { u: 16, t: 16, d: 2 }, "403": { u: 12, t: 7, d: 4 }, "025": { u: 2, t: 1, d: 3 } };
 
-        function vibrace(ms = 50) { if (navigator.vibrate) navigator.vibrate(ms); }
-        function switchPage(id) { document.querySelectorAll('.page').forEach(p => p.classList.remove('active')); document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active')); document.getElementById('page-'+id).classList.add('active'); document.getElementById('nav-'+id).classList.add('active'); vibrace(20); }
+        let stopkyInt = null; let zacatekStopek = null;
 
-        window.onload = () => {
+        function vibrace(ms = 50) { if (navigator.vibrate) navigator.vibrate(ms); }
+        function ukazToast(txt, typ = 'success') {
+            const c = document.getElementById('toast-container'); const t = document.createElement('div');
+            t.className = `${typ === 'success' ? 'bg-emerald-500' : 'bg-rose-500'} text-white px-5 py-3 rounded-full text-[10px] font-bold shadow-[0_10px_30px_rgba(0,0,0,0.5)] toast-enter flex items-center gap-2 border border-white/20`;
+            t.innerHTML = (typ === 'success' ? '✅ ' : '⚠️ ') + txt;
+            c.appendChild(t); setTimeout(() => { t.style.opacity = '0'; setTimeout(() => t.remove(), 300); }, 3000); vibrace();
+        }
+        function mluv(txt) { if('speechSynthesis' in window) { let m = new SpeechSynthesisUtterance(txt); m.lang = 'cs-CZ'; m.rate = 1.1; window.speechSynthesis.speak(m); } }
+
+        function switchPage(id) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            document.getElementById('page-'+id).classList.add('active');
+            document.getElementById('nav-'+id).classList.add('active');
+            window.scrollTo(0, 0); vibrace(20);
+        }
+
+        window.onload = async () => {
             const dnes = new Date(); document.getElementById('datum-prace').value = dnes.toISOString().split('T')[0];
             const selM = document.getElementById('gen-mesic'); for(let i=1; i<=12; i++) { let o = document.createElement('option'); o.value=i; o.text=i; if(i===dnes.getMonth()+1) o.selected=true; selM.appendChild(o); }
-            vypocitejStatistiky(); vykresliDenik(); vykresliIR(); nahrajAN();
+            
+            vypocitejStatistiky(); vykresliDenik(); vykresliIR(); nahrajAN(); nactiDraft();
+            
+            // Kontrola PDF v nové DB
+            try {
+                const pdfData = await localforage.getItem('tsc_vzor_pdf');
+                if (pdfData) {
+                    document.getElementById('vzor-label').innerText = "VZOR V DATABÁZI ULOŽEN ✅";
+                    document.getElementById('vzor-label').classList.replace('border-amber-500/40', 'border-emerald-500/40');
+                    document.getElementById('vzor-label').classList.replace('text-amber-500', 'text-emerald-400');
+                }
+            } catch (e) { console.log("DB čtení chyba"); }
+
             if(localStorage.getItem('kamil_aktivni_stopky')) { zacatekStopek = new Date(localStorage.getItem('kamil_aktivni_stopky')); updateStopkyUI(); }
             zapniRadar();
         };
 
+        // --- 💾 ULOŽENÍ PDF DO INDEXED_DB (NEOMEZENÁ KAPACITA) ---
+        function ulozitVzorDoDatabaze(e) {
+            const file = e.target.files[0]; if(!file) return;
+            const reader = new FileReader();
+            reader.onload = async (evt) => {
+                try {
+                    await localforage.setItem('tsc_vzor_pdf', evt.target.result);
+                    ukazToast("PDF Vzor byl úspěšně a trvale uložen do databáze!", "success");
+                    document.getElementById('vzor-label').innerText = "VZOR V DATABÁZI ULOŽEN ✅";
+                    document.getElementById('vzor-label').classList.replace('border-amber-500/40', 'border-emerald-500/40');
+                    document.getElementById('vzor-label').classList.replace('text-amber-500', 'text-emerald-400');
+                } catch (err) {
+                    ukazToast("Chyba při ukládání PDF: " + err.message, "error");
+                }
+            };
+            reader.readAsDataURL(file);
+        }
+
         // --- 📡 JARVIS RADAR (GEOFENCING) ---
         function dist(la1, lo1, la2, lo2) { let R = 6371; let dLa = (la2-la1)*Math.PI/180; let dLo = (lo2-lo1)*Math.PI/180; let a = Math.sin(dLa/2)**2 + Math.cos(la1*Math.PI/180)*Math.cos(la2*Math.PI/180)*Math.sin(dLo/2)**2; return R*2*Math.atan2(Math.sqrt(a), Math.sqrt(1-a)); }
-        
         function zapniRadar() {
             if(!navigator.geolocation) return;
-            gpsWatcher = navigator.geolocation.watchPosition(pos => {
+            navigator.geolocation.watchPosition(pos => {
                 let nej = ""; let minD = Infinity;
                 for(let [jm, co] of Object.entries(LOKACE)) { let d = dist(pos.coords.latitude, pos.coords.longitude, co.lat, co.lon); if(d < minD) { minD = d; nej = jm; } }
-                const aktS = localStorage.getItem('kamil_aktivni_stopky');
-                const aktP = localStorage.getItem('kamil_aktivni_prodejna');
+                const aktS = localStorage.getItem('kamil_aktivni_stopky'); const aktP = localStorage.getItem('kamil_aktivni_prodejna');
 
-                // AUTO-START
                 if(nej && minD < 0.05 && !aktS) {
                     zacatekStopek = new Date(); localStorage.setItem('kamil_aktivni_stopky', zacatekStopek.toISOString()); localStorage.setItem('kamil_aktivni_prodejna', nej);
-                    updateStopkyUI(); mluv(`Príchod k Albertu ${nej.split('-')[0]}. Čas beží.`); vibrace([100,100,100]);
+                    updateStopkyUI(); mluv(`Vítejte na pobočce ${nej.split('-')[0]}. Stopky běží.`); vibrace([100,100,100]);
                 }
-                // AUTO-STOP
-                if(aktS && aktP && dist(pos.coords.latitude, pos.coords.longitude, LOKACE[aktP].lat, LOKACE[aktP].lon) > 0.1) {
+                if(aktS && aktP && LOKACE[aktP] && dist(pos.coords.latitude, pos.coords.longitude, LOKACE[aktP].lat, LOKACE[aktP].lon) > 0.1) {
                     let min = Math.round((new Date() - new Date(aktS)) / 60000);
                     let db = JSON.parse(localStorage.getItem('kamil_denik_db') || "[]");
-                    db.push({ datum: new Date().toISOString().split('T')[0], prodejna: aktP, popis: "Auto GPS záznam", material: "", trvani: min || 1 });
+                    db.push({ datum: new Date().toISOString().split('T')[0], prodejna: aktP, popis: "Automatický GPS záznam", material: "", trvani: min || 1 });
                     localStorage.setItem('kamil_denik_db', JSON.stringify(db));
                     zacatekStopek = null; localStorage.removeItem('kamil_aktivni_stopky'); localStorage.removeItem('kamil_aktivni_prodejna');
-                    updateStopkyUI(); vypocitejStatistiky(); vykresliDenik();
-                    mluv(`Odchod potvrdený. Práca uložená.`); vibrace([200,50,200]);
+                    updateStopkyUI(); vypocitejStatistiky(); vykresliDenik(); mluv(`Odjezd detekován. Čas byl uložen.`); vibrace([200,50,200]);
                 }
             }, null, { enableHighAccuracy: true });
         }
 
-        function updateStopkyUI() {
-            const uiA = document.getElementById('active-timer-ui'); const uiN = document.getElementById('no-timer-ui');
-            const start = localStorage.getItem('kamil_aktivni_stopky');
-            if(start) {
-                uiA.classList.remove('hidden'); uiN.classList.add('hidden');
-                document.getElementById('active-timer-prodejna').innerText = localStorage.getItem('kamil_aktivni_prodejna').split('-')[0];
-                if(stopkyInterval) clearInterval(stopkyInterval);
-                stopkyInterval = setInterval(() => { document.getElementById('active-timer-clock').innerText = new Date(new Date() - new Date(start)).toISOString().substr(11, 8); }, 1000);
-            } else { uiA.classList.add('hidden'); uiN.classList.remove('hidden'); clearInterval(stopkyInterval); }
-        }
+        // --- ⏱️ STOPKY & DENÍK ---
+        function ulozDraft() { localStorage.setItem('kamil_draft_popis', document.getElementById('popis').value); localStorage.setItem('kamil_draft_mat', document.getElementById('material').value); }
+        function nactiDraft() { document.getElementById('popis').value = localStorage.getItem('kamil_draft_popis') || ""; document.getElementById('material').value = localStorage.getItem('kamil_draft_mat') || ""; }
+        function vymazDraft() { localStorage.removeItem('kamil_draft_popis'); localStorage.removeItem('kamil_draft_mat'); document.getElementById('popis').value = ""; document.getElementById('material').value = ""; }
 
-        // --- 📓 DENNÍK & STATS ---
-        function ulozZaznam_Manualni() {
-            let m = parseInt(prompt("Minúty:","60")); if(!isNaN(m)) {
-                let db = JSON.parse(localStorage.getItem('kamil_denik_db') || "[]");
-                db.push({ datum: document.getElementById('datum-prace').value, prodejna: document.getElementById('prodejna').value, popis: document.getElementById('popis').value, material: document.getElementById('material').value, trvani: m });
-                localStorage.setItem('kamil_denik_db', JSON.stringify(db));
-                vypocitejStatistiky(); vykresliDenik(); mluv("Uložené.");
-            }
-        }
-
-        function vypocitejStatistiky() {
-            let db = JSON.parse(localStorage.getItem('kamil_denik_db') || "[]"); let celkem = 0; let baraky = {};
-            db.forEach(z => { celkem += z.trvani; let p = z.prodejna.split('-')[0].trim(); baraky[p] = (baraky[p] || 0) + z.trvani; });
-            document.getElementById('stat-hodiny').innerText = Math.floor(celkem/60) + "h";
-            document.getElementById('stat-penize').innerText = (Math.floor(celkem/60) * 350).toLocaleString() + " €";
-            document.getElementById('analytika-baraku').innerHTML = Object.entries(baraky).map(([b, c]) => `<div class="flex justify-between items-center py-2 border-b border-white/5"><span class="text-slate-400 font-bold">${b}</span><span class="text-sky-400 font-digital">${(c/60).toFixed(1)}h</span></div>`).join('');
-        }
-
-        function vykresliDenik() {
-            let db = JSON.parse(localStorage.getItem('kamil_denik_db') || "[]");
-            document.getElementById('seznam-zaznamu').innerHTML = db.slice(-5).reverse().map((z, i) => `<div class="bg-white/5 p-4 rounded-2xl border border-white/5 flex justify-between items-center mb-2"><div><span class="text-emerald-400 text-[10px] font-bold">${z.datum.split('-').reverse().join('.')}</span><br><span class="text-white text-xs font-bold">${z.popis}</span></div><span class="text-sky-400 font-digital">${(z.trvani/60).toFixed(1)}h</span></div>`).join('');
-        }
-
-        // --- 🖨️ PDF PRO ENGINE ---
-        async function vygenerujAlbertPDF() {
-            const vzor = localStorage.getItem('tsc_vzor_pdf'); if(!vzor) return alert("Nahraj vzor!");
-            vibrace(100); mluv("Generujem PDF výkaz.");
-            const { PDFDocument, StandardFonts } = PDFLib;
-            const pdfDoc = await PDFDocument.load(await fetch(vzor).then(res => res.arrayBuffer()));
-            const font = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
-            const page = pdfDoc.getPages()[0];
-            const pId = document.getElementById('prodejna').value.split('-')[0].trim();
-            const mes = document.getElementById('gen-mesic').value;
-
-            page.drawText(pId, { x: 235, y: 668, size: 12, font: font });
-            page.drawText(`${mes} / 2026`, { x: 670, y: 668, size: 12, font: font });
-            page.drawText('BALCAR', { x: 235, y: 642, size: 10, font: font });
-
-            // 📑 RIADKOVANIE FIXED (102 bodov skok)
-            let dny = []; let d = new Date(2026, mes-1, 1); while(d.getMonth() === mes-1) { if(d.getDay() === (CILY[pId] ? CILY[pId].d : 5)) dny.push(d.getDate()); d.setDate(d.getDate()+1); }
-            dny.slice(0, 5).forEach((den, i) => {
-                let y = 525 - (i * 102);
-                page.drawText(document.getElementById('ai-cislo-an').value, { x: 60, y: y, size: 9, font: font });
-                page.drawText(`${den}.${mes}.`, { x: 60, y: y-18, size: 11, font: font });
-                page.drawText("kontrola technol.", { x: 260, y: y, size: 10, font: font });
-                page.drawText("2.5h", { x: 850, y: y, size: 11, font: font });
-                page.drawText("bežná údržba objektu", { x: 260, y: y-14, size: 10, font: font });
-                page.drawText("3.5h", { x: 850, y: y-14, size: 11, font: font });
-            });
-
-            const bytes = await pdfDoc.save();
-            const file = new File([bytes], `Vykaz_${pId}.pdf`, { type: 'application/pdf' });
-            if(navigator.canShare && navigator.canShare({ files: [file] })) { await navigator.share({ files: [file] }); }
-            else { let l = document.createElement('a'); l.href = URL.createObjectURL(file); l.download = file.name; l.click(); }
-        }
-
-        // Pomocné funkce
-        function nahrajAN() { document.getElementById('ai-cislo-an').value = localStorage.getItem('AN_'+document.getElementById('prodejna').value.split('-')[0].trim()) || ''; }
-        function ulozAN() { localStorage.setItem('AN_'+document.getElementById('prodejna').value.split('-')[0].trim(), document.getElementById('ai-cislo-an').value); }
-        function ulozitVzor(e) { let r = new FileReader(); r.onload = (ev) => { localStorage.setItem('tsc_vzor_pdf', ev.target.result); location.reload(); }; r.readAsDataURL(e.target.files[0]); }
-    </script>
-</body>
-</html>
+        function spustitNeznicitelneStopky() {
+            const bD = document.getElementById('btn-stopky');
+            if (zacatekStopek) {
+                let m = Math.round((new Date() - zacatekStopek) / 60000); zacatekStopek = null; localStorage.removeItem('kamil_aktivni_stopky');
+                let prod = localStorage.getItem('kamil_aktivni_prodejna') || document.getElementById('prodejna').value; localStorage.removeItem('kamil_aktivni_prodejna');
+                document.getElementById('prodejna').value = prod;
+                bD.innerHTML = "⏱️ ZAPNOUT STOPKY"; bD.classList.replace('from-rose-600', 'from-emerald-600'); bD.classList.replace('to-red-500', 'to-teal-500');
+                switchPage('denik'); ukazToast(`Čas: ${m} min.`); mluv("Stopky vypnuty. Doplňte popis a uložte."); updateStopky
