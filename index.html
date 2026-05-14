@@ -289,4 +289,104 @@
                 let prod = localStorage.getItem('kamil_aktivni_prodejna') || document.getElementById('prodejna').value; localStorage.removeItem('kamil_aktivni_prodejna');
                 document.getElementById('prodejna').value = prod;
                 bD.innerHTML = "⏱️ ZAPNOUT STOPKY"; bD.classList.replace('from-rose-600', 'from-emerald-600'); bD.classList.replace('to-red-500', 'to-teal-500');
-                switchPage('denik'); ukazToast(`Čas: ${m} min.`); mluv("Stopky vypnuty. Doplňte popis a uložte."); updateStopky
+                switchPage('denik'); ukazToast(`Čas: ${m} min.`); mluv("Stopky vypnuty. Doplňte popis a uložte."); updateStopkyUI();
+            } else {
+                zacatekStopek = new Date(); const prod = document.getElementById('prodejna').value;
+                localStorage.setItem('kamil_aktivni_stopky', zacatekStopek.toISOString()); localStorage.setItem('kamil_aktivni_prodejna', prod);
+                bD.innerHTML = "⏹️ UKONČIT (ZAPSAT)"; bD.classList.replace('from-emerald-600', 'from-rose-600'); bD.classList.replace('to-teal-500', 'to-red-500');
+                mluv("Stopky manuálně spuštěny"); updateStopkyUI(); switchPage('dashboard');
+            }
+        }
+
+        function updateStopkyUI() {
+            const uiA = document.getElementById('active-timer-ui'); const uiN = document.getElementById('no-timer-ui'); const start = localStorage.getItem('kamil_aktivni_stopky');
+            if(start) {
+                uiA.classList.remove('hidden'); uiN.classList.add('hidden'); document.getElementById('active-timer-prodejna').innerText = localStorage.getItem('kamil_aktivni_prodejna').split('-')[0];
+                if(stopkyInt) clearInterval(stopkyInt);
+                stopkyInt = setInterval(() => { document.getElementById('active-timer-clock').innerText = new Date(new Date() - new Date(start)).toISOString().substr(11, 8); }, 1000);
+            } else { uiA.classList.add('hidden'); uiN.classList.remove('hidden'); clearInterval(stopkyInt); }
+        }
+
+        function ulozZaznam_Manualni() {
+            let m = parseInt(prompt("Zadej minuty:", "60")); if(!isNaN(m) && m > 0) {
+                if(!document.getElementById('popis').value) return ukazToast("Chybí popis!", "error");
+                let db = JSON.parse(localStorage.getItem('kamil_denik_db') || "[]");
+                db.push({ datum: document.getElementById('datum-prace').value, prodejna: document.getElementById('prodejna').value, popis: document.getElementById('popis').value, material: document.getElementById('material').value, trvani: m });
+                localStorage.setItem('kamil_denik_db', JSON.stringify(db)); vymazDraft();
+                vypocitejStatistiky(); vykresliDenik(); mluv("Uloženo."); switchPage('dashboard');
+            }
+        }
+
+        function vypocitejStatistiky() {
+            let db = JSON.parse(localStorage.getItem('kamil_denik_db') || "[]"); let m = 0; let bar = {};
+            db.forEach(z => { m += z.trvani; let p = z.prodejna.split('-')[0].trim(); bar[p] = (bar[p] || 0) + z.trvani; });
+            document.getElementById('stat-hodiny').innerText = Math.floor(m/60) + "h"; document.getElementById('stat-penize').innerText = (Math.floor(m/60) * 350).toLocaleString() + " Kč";
+            document.getElementById('analytika-baraku').innerHTML = Object.entries(bar).map(([b, c]) => `<div class="flex justify-between items-center py-2.5 border-b border-white/5"><span class="text-slate-300 font-bold text-[11px]">${b}</span><span class="text-sky-400 font-digital text-sm">${(c/60).toFixed(1)}h</span></div>`).join('');
+        }
+
+        function vykresliDenik() {
+            let db = JSON.parse(localStorage.getItem('kamil_denik_db') || "[]");
+            document.getElementById('seznam-zaznamu').innerHTML = db.slice().reverse().map((z, i) => `<div class="bg-[#0a0f1c] p-4 rounded-2xl border border-slate-800 flex justify-between items-center mb-3"><div><span class="text-emerald-400 text-[10px] font-black uppercase tracking-wider">${z.datum.split('-').reverse().join('.')}</span><br><span class="text-slate-200 text-xs font-bold leading-relaxed block mt-1">${z.popis}</span><span class="text-[9px] text-slate-500">${z.prodejna.split(' ')[0]}</span></div><div class="flex flex-col items-end gap-2"><span class="text-sky-400 font-digital text-xl">${(z.trvani/60).toFixed(1)}h</span><button onclick="smazatZaznam(${db.length-1-i})" class="text-rose-500 font-bold text-[9px] uppercase tracking-wider bg-rose-500/10 px-2 py-1 rounded-md">Smazat</button></div></div>`).join('');
+        }
+        function smazatZaznam(i) { let db = JSON.parse(localStorage.getItem('kamil_denik_db')); db.splice(i, 1); localStorage.setItem('kamil_denik_db', JSON.stringify(db)); vypocitejStatistiky(); vykresliDenik(); }
+        function vymazData() { if(confirm("Opravdu smazat celý měsíc?")) { localStorage.removeItem('kamil_denik_db'); location.reload(); } }
+        function rychloZapis(p, m) { document.getElementById('popis').value = p; document.getElementById('material').value = m; ulozDraft(); vibrace(); }
+        function ulozAN() { localStorage.setItem('AN_'+document.getElementById('prodejna').value.split('-')[0].trim(), document.getElementById('ai-cislo-an').value); }
+        function nahrajAN() { document.getElementById('ai-cislo-an').value = localStorage.getItem('AN_'+document.getElementById('prodejna').value.split('-')[0].trim()) || ''; }
+
+        function aiDetekceMaterialu() {
+            let txt = document.getElementById('popis').value.toLowerCase(); let m = [];
+            if(txt.includes('bater')||txt.includes('umyvad')) m.push('1x baterie, silikon'); if(txt.includes('dveř')||txt.includes('pant')) m.push('kování, mazivo');
+            if(txt.includes('odpad')||txt.includes('sifon')) m.push('čistič, těsnění'); if(txt.includes('světl')||txt.includes('led')) m.push('LED zdroj, svorky');
+            if(m.length > 0) { document.getElementById('material').value = m.join(' | '); ulozDraft(); }
+        }
+
+        // --- 🖨️ PDF GENERÁTOR (Čte z IndexedDB) ---
+        async function vygenerujAlbertPDF() {
+            try {
+                const base64 = await localforage.getItem('tsc_vzor_pdf'); 
+                if(!base64) return ukazToast("Nejdříve nahraj vzor PDF v nastavení!", "error");
+                
+                vibrace(100); mluv("Generuji PDF.");
+                const { PDFDocument, StandardFonts } = PDFLib;
+                const pdfDoc = await PDFDocument.load(await fetch(base64).then(res => res.arrayBuffer()));
+                const font = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+                const page = pdfDoc.getPages()[0];
+                const pId = document.getElementById('prodejna').value.split('-')[0].trim();
+                const mes = document.getElementById('gen-mesic').value;
+
+                page.drawText(pId, { x: 235, y: 668, size: 12, font: font });
+                page.drawText(`${mes} / 2026`, { x: 670, y: 668, size: 12, font: font });
+                page.drawText('BALCAR', { x: 235, y: 642, size: 10, font: font });
+
+                let d = new Date(2026, mes-1, 1); let dny = []; 
+                while(d.getMonth() === mes-1) { if(d.getDay() === (CILY[pId] ? CILY[pId].d : 5)) dny.push(d.getDate()); d.setDate(d.getDate()+1); }
+                
+                const POOL = [{ p: "oprava obkladu a dlazby\ncisteni odpadu v zazemi", m: "lepidlo, silikon\ntesneni" }, { p: "oprava poskozenych regalu\ndotazeni ochrannych list", m: "vruty\ntmel" }, { p: "vymena sanitarni techniky\noprava satnich skrinek", m: "1x baterie\npanty" }];
+                const safe = (t) => t.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+
+                dny.slice(0, 5).forEach((den, i) => {
+                    let y = 525 - (i * 102); // Těch 102 bodů řádkování je zde!
+                    page.drawText(document.getElementById('ai-cislo-an').value, { x: 60, y: y, size: 9, font: font });
+                    page.drawText(`${den}.${mes}.`, { x: 60, y: y-18, size: 11, font: font });
+                    page.drawText("kontrola technol.", { x: 260, y: y, size: 10, font: font });
+                    page.drawText("2.0h", { x: 850, y: y, size: 11, font: font });
+                    page.drawText(safe(POOL[i%POOL.length].p), { x: 260, y: y-14, size: 10, font: font, lineHeight: 14 });
+                    page.drawText(safe(POOL[i%POOL.length].m), { x: 610, y: y-14, size: 10, font: font, lineHeight: 14 });
+                    page.drawText("3.0h", { x: 850, y: y-14, size: 11, font: font });
+                });
+
+                page.drawText('BALCAR', { x: 80, y: 155, size: 11, font: font });
+
+                const bytes = await pdfDoc.save();
+                const file = new File([bytes], `Vykaz_${pId}.pdf`, { type: 'application/pdf' });
+                if(navigator.canShare && navigator.canShare({ files: [file] })) { await navigator.share({ files: [file] }); }
+                else { let l = document.createElement('a'); l.href = URL.createObjectURL(file); l.download = file.name; l.click(); }
+                mluv("Hotovo.");
+            } catch(e) {
+                ukazToast("Chyba PDF: " + e.message, "error");
+            }
+        }
+    </script>
+</body>
+</html>
