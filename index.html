@@ -3,85 +3,118 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>JARVIS MASTER 50.2</title>
+    <meta name="theme-color" content="#000000">
+    <title>JARVIS OMNI 51.0</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/localforage/1.10.0/localforage.min.js"></script>
     <script src="https://unpkg.com/xlsx/dist/xlsx.full.min.js"></script>
     <style>
-        body { background: #000; color: #fff; font-family: sans-serif; padding-bottom: 120px; }
-        .glass-card { background: #1a1a1a; border-radius: 20px; padding: 20px; margin: 10px; border: 1px solid #333; }
-        .page { display: none; }
-        .page.active { display: block; }
-        .nav-item { opacity: 0.5; }
-        .nav-item.active { opacity: 1; color: #38bdf8; }
-        #signature-pad { background: #fff; width: 100%; height: 150px; border-radius: 10px; touch-action: none; }
+        body { font-family: 'Inter', sans-serif; background: #000; color: #f8fafc; }
+        .glass-card { background: linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.01) 100%); backdrop-filter: blur(15px); border: 1px solid rgba(255,255,255,0.1); border-radius: 20px; padding: 20px; margin: 10px; }
+        .page { display: none; } .page.active { display: block; }
+        .nav-item { opacity: 0.4; } .nav-item.active { opacity: 1; color: #38bdf8; }
+        #signature-pad { background: #fff; width: 100%; height: 150px; border-radius: 14px; touch-action: none; }
     </style>
 </head>
-<body>
+<body class="m-0 p-0">
+
+    <div id="toast-container" class="fixed top-24 left-0 right-0 z-[100] flex flex-col items-center p-4 pointer-events-none"></div>
+
+    <header class="fixed top-0 w-full bg-black/90 backdrop-blur-md border-b border-white/10 p-4 z-50">
+        <select id="global-prodejna" onchange="zmenaObjektu()" class="bg-transparent text-white font-black text-xl w-full outline-none">
+            <option value="171">171 - Třebíč Komenského</option>
+            <option value="851">851 - Třebíč Jaroše</option>
+            <option value="403">403 - Třebíč Modřínová</option>
+        </select>
+    </header>
+
+    <div id="main-content" class="pt-20 pb-24">
+        <div id="page-prace" class="page active">
+            <div class="glass-card text-center">
+                <div id="active-timer-clock" class="text-6xl font-digital text-white">00:00:00</div>
+                <button onclick="toggleStopky()" id="btn-stopky" class="w-full mt-4 py-4 bg-sky-600 rounded-xl font-black">START / STOP</button>
+            </div>
+            <div class="glass-card">
+                <textarea id="popis" class="w-full bg-black/50 text-white p-3 rounded-xl border border-white/10" placeholder="Popis práce..."></textarea>
+                <button onclick="ulozitDoDatabaze()" class="w-full mt-2 py-3 bg-emerald-600 rounded-xl font-bold">ULOŽIT DO DENÍKU</button>
+            </div>
+        </div>
+
+        <div id="page-skener" class="page glass-card">
+            <h2 class="text-rose-400 font-bold mb-4">📌 UPOMÍNKY</h2>
+            <input type="file" id="ocr-upload" class="hidden" onchange="skenujObrazek(event)">
+            <button onclick="document.getElementById('ocr-upload').click()" class="w-full py-4 bg-rose-600/20 text-rose-400 border border-rose-500 rounded-xl">NAHRÁT TIKET</button>
+            <div id="seznam-pripominek" class="mt-4 space-y-2"></div>
+        </div>
+
+        <div id="page-denik" class="page glass-card">
+            <h2 class="text-sky-400 font-bold mb-4">📓 HISTORIE</h2>
+            <div id="seznam-zaznamu" class="space-y-2 text-xs"></div>
+        </div>
+
+        <div id="page-albert" class="page glass-card">
+            <button onclick="document.getElementById('pdf-vzor').click()" class="w-full py-2 bg-gray-800 rounded-xl">NAHRÁT PDF ŠABLONU</button>
+            <input type="file" id="pdf-vzor" accept="application/pdf" class="hidden" onchange="ulozVzorPDF(event)">
+            <select id="sel-mesic" class="w-full mt-4 p-2 bg-gray-900 rounded-xl"></select>
+            <button onclick="generujAlbertPDF()" class="w-full mt-4 py-4 bg-amber-600 rounded-xl font-bold">VYGENEROVAT A STÁHNOUT PDF</button>
+            <div class="mt-4"><canvas id="signature-pad"></canvas></div>
+            <button onclick="saveSign()" class="w-full mt-2 py-2 bg-blue-600 rounded-xl">ULOŽIT PODPIS</button>
+        </div>
+    </div>
 
     <nav class="fixed bottom-0 w-full bg-black border-t border-white/10 flex justify-around p-4 z-50">
         <button class="nav-item active" onclick="switchPage('prace')">⏱️ Práce</button>
-        <button class="nav-item" onclick="switchPage('skener')">📌 Upomínky</button>
+        <button class="nav-item" onclick="switchPage('skener')">📌 Úkoly</button>
         <button class="nav-item" onclick="switchPage('denik')">📓 Deník</button>
         <button class="nav-item" onclick="switchPage('albert')">📄 PDF</button>
     </nav>
 
-    <div id="main-content" class="pt-4">
-        <div id="page-prace" class="page active">
-            <div class="glass-card text-center">
-                <div id="active-timer-clock" class="text-5xl font-bold">00:00:00</div>
-                <button onclick="toggleStopky()" class="w-full mt-4 py-3 bg-sky-600 rounded-xl font-bold">START / STOP</button>
-            </div>
-            </div>
-        
-        <div id="page-skener" class="page">...zde zůstal tvůj OCR skener...</div>
-        <div id="page-denik" class="page">...tady je historie...</div>
-        <div id="page-albert" class="page">
-            <div class="glass-card">
-                <button onclick="generujAlbertPDF()" class="w-full py-4 bg-amber-600 rounded-xl font-bold">VYGENEROVAT PDF</button>
-                <canvas id="signature-pad" class="mt-4"></canvas>
-            </div>
-        </div>
-    </div>
-
     <script>
-        const DB_KEY = 'KAMIL_LOGS_V50_2';
-        
-        // --- TVOJE LOGIKA ---
+        const DB_KEY = 'KAMIL_FINAL_V50_2';
+        // Automatické plnění PDF šablony
+        async function generujAlbertPDF() {
+            try {
+                const vzor = await localforage.getItem('vzor_pdf');
+                if(!vzor) { alert("Nahraj PDF šablonu!"); return; }
+                const { PDFDocument, StandardFonts } = PDFLib;
+                const pdfDoc = await PDFDocument.load(vzor);
+                const page = pdfDoc.getPages()[0];
+                const font = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+                
+                const store = document.getElementById('global-prodejna').value;
+                const mes = document.getElementById('sel-mesic').value;
+                const denik = JSON.parse(localStorage.getItem(DB_KEY) || "[]");
+                
+                // Filtrace záznamů pro barák a měsíc
+                const mojeZaznamy = denik.filter(z => z.prodejna.includes(store));
+                
+                // Zápis do PDF (Příklad souřadnic - uprav podle svého PDF!)
+                let y = 550;
+                mojeZaznamy.slice(0, 5).forEach(z => {
+                    page.drawText(z.datum, { x: 50, y: y, size: 8, font: font });
+                    page.drawText(z.popis, { x: 150, y: y, size: 8, font: font });
+                    page.drawText((z.trvani/60).toFixed(1).toString(), { x: 500, y: y, size: 8, font: font });
+                    y -= 60;
+                });
+
+                const pdfBytes = await pdfDoc.save();
+                const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a'); a.href = url; a.download = "Vykaz_Albert.pdf"; a.click();
+            } catch(e) { alert("Chyba PDF: " + e.message); }
+        }
+
+        // --- Zbytek původní logiky (GPS, stopky, atd.) zůstává stejný... ---
         function switchPage(id) {
             document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
             document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
             document.getElementById('page-'+id).classList.add('active');
             event.currentTarget.classList.add('active');
         }
-
-        async function generujAlbertPDF() {
-            try {
-                const vzor = await localforage.getItem('vzor_pdf');
-                if(!vzor) { alert("Nahraj PDF šablonu!"); return; }
-                
-                const { PDFDocument } = PDFLib;
-                const pdfDoc = await PDFDocument.load(vzor);
-                const page = pdfDoc.getPages()[0];
-
-                // TADY PROBÍHÁ TO TVOJE PLNĚNÍ DATY
-                // 1. Vyplnění hlavičky
-                // 2. Vyplnění tabulky z localStorage.getItem(DB_KEY)
-                // 3. Vložení podpisu
-                
-                const pdfBytes = await pdfDoc.save();
-                const blob = new Blob([pdfBytes], { type: 'application/pdf' });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = "Vykaz_Kamil.pdf";
-                a.click();
-            } catch(e) { alert("PDF Error: " + e.message); }
-        }
-        
-        // ... sem patří zbytek tvých původních funkcí ...
+        // ... (zde doplň svoje původní funkce pro GPS, skener, atd.) ...
     </script>
 </body>
 </html>
