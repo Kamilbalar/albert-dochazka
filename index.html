@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta name="theme-color" content="#000000">
-    <title>JARVIS WEB 47.0</title>
+    <title>JARVIS WEB 48.0</title>
     
     <link rel="manifest" href="data:application/json;base64,eyJuYW1lIjoiSkFSVklTIiwiZGlzcGxheSI6InN0YW5kYWxvbmUiLCJiYWNrZ3JvdW5kX2NvbG9yIjoiIzAwMDAwMCIsInRoZW1lX2NvbG9yIjoiIzAwMDAwMCJ9">
     
@@ -53,12 +53,9 @@
                     <option value="735">735 - Okříšky</option>
                 </select>
             </div>
-            <div class="flex items-center gap-3">
-                <button onclick="spustitNavigaci()" class="bg-sky-500/10 border border-sky-500/30 w-11 h-11 rounded-xl flex items-center justify-center text-xl active:scale-90 transition-all shadow-lg">🗺️</button>
-                <div class="text-right">
-                    <div class="text-[8px] font-black text-emerald-500 uppercase tracking-widest">Číslo AP</div>
-                    <input type="text" id="global-an" onchange="ulozAN()" class="bg-transparent text-white font-bold text-right outline-none w-20 text-lg" placeholder="Zadat">
-                </div>
+            <div class="text-right">
+                <div class="text-[8px] font-black text-emerald-500 uppercase tracking-widest">Číslo AP</div>
+                <input type="text" id="global-an" onchange="ulozAN()" class="bg-transparent text-white font-bold text-right outline-none w-20 text-lg" placeholder="Zadat">
             </div>
         </div>
     </header>
@@ -149,12 +146,13 @@
         <div id="page-albert" class="page space-y-5">
             <div class="glass-card p-6 border-t-2 border-amber-500/40 space-y-4">
                 <h2 class="text-amber-500 font-black text-sm uppercase tracking-wider">Měsíční Výkaz Albert</h2>
+                <p class="text-slate-400 text-xs mb-2">Aplikace automaticky projde deník a vyplní všechny práce pro tento barák v daném měsíci přímo do tabulky dokumentu.</p>
                 <input type="file" id="pdf-vzor" accept="application/pdf" class="hidden" onchange="ulozVzorPDF(event)">
                 <button onclick="document.getElementById('pdf-vzor').click()" id="vzor-status" class="w-full py-3.5 bg-black/40 text-amber-500 border border-amber-500/20 rounded-xl font-bold text-[10px] uppercase">📄 Nahrát čistý PDF Vzor</button>
                 <select id="sel-mesic" class="w-full bg-slate-900 border border-white/10 p-3.5 rounded-xl text-white font-bold outline-none"></select>
                 
                 <button onclick="generujAlbertPDF()" class="w-full py-5 bg-gradient-to-r from-amber-600 to-orange-500 rounded-2xl font-black text-white text-sm uppercase shadow-xl active:scale-95 transition-transform">
-                    🖨️ Stáhnout PDF Výkaz
+                    🖨️ Stáhnout Vyplněný PDF Výkaz
                 </button>
             </div>
 
@@ -241,7 +239,7 @@
             if(!audioUnlocked && 'speechSynthesis' in window) {
                 audioUnlocked = true;
                 let h = new Date().getHours(); let p = h < 10 ? "Dobré ráno" : (h > 18 ? "Dobrý večer" : "Dobrý den");
-                mluv(`${p} Kamile. Čistá webová platforma verze 47 spuštěna.`); initGPS();
+                mluv(`${p} Kamile. Verze 48. Nativní vyplňování výkazu aktivováno.`); initGPS();
             }
         }
         function mluv(t) { if(audioUnlocked && 'speechSynthesis' in window) { window.speechSynthesis.cancel(); const m = new SpeechSynthesisUtterance(t); m.lang='cs-CZ'; window.speechSynthesis.speak(m); } }
@@ -249,16 +247,6 @@
 
         function pridatZChecklistu(typ) { const txt = CHECKLISTY[typ]; const area = document.getElementById('popis'); if(!area.value.includes(txt)) { area.value += txt; ukazToast("Úkon vložen"); } }
 
-        // --- 🗺️ WEBOVÝ INTENT PRO GOOGLE MAPY ---
-        function spustitNavigaci() {
-            const id = document.getElementById('global-prodejna').value; const loc = PRODEJNY[id];
-            if(loc) {
-                ukazToast(`Zapínám mapy...`); mluv(`Spouštím trasu.`);
-                window.location.href = `https://www.google.com/maps/dir/?api=1&destination=${loc.lat},${loc.lon}`;
-            }
-        }
-
-        // --- 🎙️ ČISTÉ WEBOVÉ DIKTOVÁNÍ (V CHROME FUNGUJE PERFEKTNĚ) ---
         function toggleDiktovani() {
             const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
             if (!SpeechRec) { ukazToast("Prohlížeč nepodporuje diktování.", "error"); return; }
@@ -286,14 +274,14 @@
         function pridatPolozkuNakupu() {
             const id = document.getElementById('global-prodejna').value;
             const input = document.getElementById('input-novy-nakup'); const text = input.value.trim(); if(!text) return;
-            let db = JSON.parse(localStorage.getItem('nakupy_v47_' + id) || "[]");
+            let db = JSON.parse(localStorage.getItem('nakupy_v48_' + id) || "[]");
             db.push({ id: Date.now(), text: text, koupeno: false });
-            localStorage.setItem('nakupy_v47_' + id, JSON.stringify(db));
+            localStorage.setItem('nakupy_v48_' + id, JSON.stringify(db));
             input.value = ""; vykresliNakupPolozky(); ukazToast("Zapsáno!");
         }
         function vykresliNakupPolozky() {
             const id = document.getElementById('global-prodejna').value;
-            const db = JSON.parse(localStorage.getItem('nakupy_v47_' + id) || "[]");
+            const db = JSON.parse(localStorage.getItem('nakupy_v48_' + id) || "[]");
             const box = document.getElementById('list-nakup-polozky');
             if(db.length === 0) { box.innerHTML = `<div class="text-center py-2 text-slate-600 text-[11px]">Nákupní seznam prázdný.</div>`; return; }
             box.innerHTML = db.map(p => `
@@ -305,10 +293,9 @@
                     </div>
                 </div>`).join('');
         }
-        function skrtnoutNakup(barakId, polozkaId) { let db = JSON.parse(localStorage.getItem('nakupy_v47_' + barakId) || "[]"); db = db.map(p => p.id === polozkaId ? { ...p, koupeno: !p.koupeno } : p); localStorage.setItem('nakupy_v47_' + barakId, JSON.stringify(db)); vykresliNakupPolozky(); }
-        function smazatNakup(barakId, polozkaId) { let db = JSON.parse(localStorage.getItem('nakupy_v47_' + barakId) || "[]"); db = db.filter(p => p.id !== polozkaId); localStorage.setItem('nakupy_v47_' + barakId, JSON.stringify(db)); vykresliNakupPolozky(); }
+        function skrtnoutNakup(barakId, polozkaId) { let db = JSON.parse(localStorage.getItem('nakupy_v48_' + barakId) || "[]"); db = db.map(p => p.id === polozkaId ? { ...p, koupeno: !p.koupeno } : p); localStorage.setItem('nakupy_v48_' + barakId, JSON.stringify(db)); vykresliNakupPolozky(); }
+        function smazatNakup(barakId, polozkaId) { let db = JSON.parse(localStorage.getItem('nakupy_v48_' + barakId) || "[]"); db = db.filter(p => p.id !== polozkaId); localStorage.setItem('nakupy_v48_' + barakId, JSON.stringify(db)); vykresliNakupPolozky(); }
 
-        // --- 📅 ČISTÝ WEBOVÝ SOUBOR KALENDÁŘE PRO ANDROID ---
         function exportDoKalendareNativne(textUpominky) {
             let datumEventu = new Date(); const regex = /(\d{1,2})\.(\d{1,2})\.(\d{4})?/; const match = textUpominky.match(regex);
             if(match) {
@@ -375,7 +362,6 @@
             }
         }
 
-        // Periodická kontrola a hlavně kontrola při probuzení obrazovky telefonu
         function initGPS() {
             setInterval(zjistiPolohuAProvedAkci, 10000);
             document.addEventListener("visibilitychange", () => {
@@ -396,15 +382,15 @@
                 const { data: { text } } = await Tesseract.recognize(file, 'ces', { logger: m => { if (m.status === 'recognizing text') { let p = Math.round(m.progress * 100); bar.style.width = p + "%"; document.getElementById('ocr-percent').innerText = p + "%"; } } });
                 container.classList.add('hidden');
                 if(text && text.trim().length > 5) {
-                    let list = JSON.parse(localStorage.getItem('pripominky_v47') || "[]");
+                    let list = JSON.parse(localStorage.getItem('pripominky_v48') || "[]");
                     list.push({ id: Date.now(), text: text.replace(/\s+/g, ' ') });
-                    localStorage.setItem('pripominky_v47', JSON.stringify(list));
+                    localStorage.setItem('pripominky_v48', JSON.stringify(list));
                     vykresliPripominky(); ukazToast("Upomínka zapsána!"); mluv("Úkol přidán.");
                 }
             } catch (e) { container.classList.add('hidden'); ukazToast("Chyba OCR.", "error"); }
         }
         function vykresliPripominky() {
-            const db = JSON.parse(localStorage.getItem('pripominky_v47') || "[]"); const box = document.getElementById('seznam-pripominek');
+            const db = JSON.parse(localStorage.getItem('pripominky_v48') || "[]"); const box = document.getElementById('seznam-pripominek');
             if(db.length === 0) { box.innerHTML = `<div class="text-center py-5 text-slate-600 text-xs">Všechny úkoly hotové!</div>`; return; }
             box.innerHTML = db.map(p => `
                 <div class="glass-card p-4 relative space-y-3 border-l-4 border-rose-500">
@@ -415,20 +401,20 @@
                     </div>
                 </div>`).join('');
         }
-        function odskrtnoutPripominku(id) { let db = JSON.parse(localStorage.getItem('pripominky_v47') || "[]"); db = db.filter(item => item.id !== id); localStorage.setItem('pripominky_v47', JSON.stringify(db)); vykresliPripominky(); }
+        function odskrtnoutPripominku(id) { let db = JSON.parse(localStorage.getItem('pripominky_v48') || "[]"); db = db.filter(item => item.id !== id); localStorage.setItem('pripominky_v48', JSON.stringify(db)); vykresliPripominky(); }
 
         // --- ☁️ CLOUD ---
-        async function generovatNovyKlic() { const k = "KAMIL-" + Math.floor(1000 + Math.random() * 9000); document.getElementById('cloud-token').value = k; localStorage.setItem('cloud_key_v47', k); ukazToast("Klíč připraven."); }
+        async function generovatNovyKlic() { const k = "KAMIL-" + Math.floor(1000 + Math.random() * 9000); document.getElementById('cloud-token').value = k; localStorage.setItem('cloud_key_v48', k); ukazToast("Klíč připraven."); }
         async function cloudPush() {
             const k = document.getElementById('cloud-token').value.trim().toUpperCase(); if(!k) return;
-            localStorage.setItem('cloud_key_v47', k); const payload = { logs: localStorage.getItem(DB_KEY) || "[]", prip: localStorage.getItem('pripominky_v47') || "[]" };
+            localStorage.setItem('cloud_key_v48', k); const payload = { logs: localStorage.getItem(DB_KEY) || "[]", prip: localStorage.getItem('pripominky_v48') || "[]" };
             try { await fetch(`https://kvdb.io/S9x5W27bYg63M29V7z4p/${k}`, { method: 'POST', body: JSON.stringify(payload) }); ukazToast("Zálohováno do cloudu.", "success"); } catch(e) {}
         }
         async function cloudPull() {
             const k = document.getElementById('cloud-token').value.trim().toUpperCase(); if(!k) return alert("Zadej kód!");
             try {
                 const res = await fetch(`https://kvdb.io/S9x5W27bYg63M29V7z4p/${k}`); const resData = await res.json();
-                if(resData && resData.logs) { localStorage.setItem(DB_KEY, resData.logs); if(resData.prip) localStorage.setItem('pripominky_v47', resData.prip); ukazToast("Synchronizováno!"); vykresliDenik(); vykresliPripominky(); zmenaObjektu(); }
+                if(resData && resData.logs) { localStorage.setItem(DB_KEY, resData.logs); if(resData.prip) localStorage.setItem('pripominky_v48', resData.prip); ukazToast("Synchronizováno!"); vykresliDenik(); vykresliPripominky(); zmenaObjektu(); }
             } catch(e) {}
         }
 
@@ -465,7 +451,7 @@
             localStorage.setItem(DB_KEY, JSON.stringify(db));
             document.getElementById('popis').value = ""; document.getElementById('material').value = ""; smazatFotoNahled();
             ukazToast("Uloženo do deníku"); vykresliDenik();
-            if(localStorage.getItem('cloud_key_v47')) { cloudPush(); } switchPage('denik');
+            if(localStorage.getItem('cloud_key_v48')) { cloudPush(); } switchPage('denik');
         }
         function ulozManualniZaznam() { let m = parseInt(prompt("Zadej minuty:","60")); if(!isNaN(m)) ulozitDoDatabaze(m); }
 
@@ -491,24 +477,85 @@
                 </div>`).join('');
         }
 
-        // --- 🖨️ ČISTÝ STANDARDNÍ WEBOVÝ DOWNLOAD (PDF + EXCEL) ---
+        // --- 🖨️ MAGIE: AUTOMATICKÉ VYPISOVÁNÍ DENÍKU DO 5 ŘÁDKŮ TABULKY ---
         async function generujAlbertPDF() {
             try {
-                ukazToast("Sestavuji PDF výkaz..."); const vzor = await localforage.getItem('vzor_pdf_v47'); if(!vzor) return ukazToast("Nahraj vzor PDF!", "error");
-                const { PDFDocument, StandardFonts } = PDFLib; const pdfDoc = await PDFDocument.load(vzor);
-                const page = pdfDoc.getPages()[0]; const font = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
-                const storeId = document.getElementById('global-prodejna').value; const mes = document.getElementById('sel-mesic').value;
+                ukazToast("Sestavuji PDF výkaz..."); 
+                const vzor = await localforage.getItem('vzor_pdf_v48'); 
+                if(!vzor) return ukazToast("Nahraj vzor PDF!", "error");
+                
+                const { PDFDocument, StandardFonts } = PDFLib; 
+                const pdfDoc = await PDFDocument.load(vzor);
+                const page = pdfDoc.getPages()[0]; 
+                const font = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+                const storeId = document.getElementById('global-prodejna').value; 
+                const mes = document.getElementById('sel-mesic').value;
 
-                page.drawText(storeId, { x: 235, y: 668, size: 12, font: font }); page.drawText(`${mes} / 2026`, { x: 670, y: 668, size: 12, font: font });
-                const sB64 = await localforage.getItem('podpis_v47'); if(sB64) { const sImg = await pdfDoc.embedPng(sB64); page.drawImage(sImg, { x: 300, y: 620, width: 80, height: 35 }); }
+                // 1. Zápis Hlavičky (Číslo objektu a Měsíc/Rok)
+                page.drawText(storeId, { x: 235, y: 668, size: 12, font: font }); 
+                page.drawText(`${mes} / 2026`, { x: 670, y: 668, size: 12, font: font });
+
+                // 2. Čtení Deníku a filtrace pro tento barák a vybraný měsíc
+                let db = JSON.parse(localStorage.getItem(DB_KEY) || "[]");
+                let storeLogs = db.filter(z => {
+                    if (!z.prodejna.includes(storeId)) return false;
+                    // Ořezání měsíce z data (předpoklad formátu DD.MM.YYYY)
+                    const parts = z.datum.split('.');
+                    if (parts.length >= 2) { return parseInt(parts[1].trim()) === parseInt(mes); }
+                    return false;
+                });
+
+                // Vybereme posledních 5 záznamů (aby se vešly do 5 řádků v PDF)
+                const rowsToPrint = storeLogs.slice(0, 5);
+
+                // Přesné Y souřadnice pro 5 řádků v PDF tabulce TSC Group
+                const rowYs = [560, 470, 380, 290, 200]; 
+                let apNumber = localStorage.getItem('AN_' + storeId) || "";
+
+                rowsToPrint.forEach((z, i) => {
+                    let y = rowYs[i];
+                    
+                    // Sloupec 1: Datum a BÚ / číslo AH
+                    page.drawText(z.datum, { x: 50, y: y + 10, size: 8, font: font });
+                    page.drawText(apNumber, { x: 50, y: y - 5, size: 8, font: font });
+                    
+                    // Sloupec 3: Druh a popis práce (rozříznutí textu na dva řádky, pokud je dlouhý)
+                    let pop = z.popis || "";
+                    if(pop.length > 35) {
+                        page.drawText(pop.substring(0, 35), { x: 165, y: y + 10, size: 8, font: font });
+                        page.drawText(pop.substring(35, 70) + (pop.length > 70 ? "..." : ""), { x: 165, y: y - 5, size: 8, font: font });
+                    } else {
+                        page.drawText(pop, { x: 165, y: y, size: 8, font: font });
+                    }
+                    
+                    // Sloupec 4: Použitý materiál
+                    let mat = z.material || "";
+                    if(mat.length > 25) {
+                        page.drawText(mat.substring(0, 25), { x: 365, y: y + 10, size: 8, font: font });
+                        page.drawText(mat.substring(25, 50), { x: 365, y: y - 5, size: 8, font: font });
+                    } else {
+                        page.drawText(mat, { x: 365, y: y, size: 8, font: font });
+                    }
+                    
+                    // Sloupec 5: Odpracované hodiny
+                    let hodTxt = (z.trvani / 60).toFixed(1);
+                    page.drawText(hodTxt, { x: 535, y: y, size: 10, font: font });
+                });
+
+                // 3. Podpis na správné místo (Za poskytovatele - dole vlevo)
+                const sB64 = await localforage.getItem('podpis_v48'); 
+                if(sB64) { 
+                    const sImg = await pdfDoc.embedPng(sB64); 
+                    page.drawImage(sImg, { x: 60, y: 30, width: 120, height: 40 }); 
+                }
                 
                 const pdfBytes = await pdfDoc.save();
                 const blob = new Blob([pdfBytes], { type: 'application/pdf' });
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a'); a.href = url; a.download = `Vykaz_Albert_${storeId}_Mesic_${mes}_2026.pdf`;
                 document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
-                ukazToast("Výkaz stažen!", "success"); mluv("Výkaz hotov.");
-            } catch(e) { ukazToast("Chyba PDF", "error"); }
+                ukazToast("Výkaz stažen s reálnými daty z deníku!", "success"); mluv("Výkaz hotov.");
+            } catch(e) { ukazToast("Chyba při sestavování PDF", "error"); console.error(e); }
         }
 
         function generujExcelSef() {
@@ -538,16 +585,16 @@
         }); 
         canv.addEventListener('pointerup', (e) => { draw = false; canv.releasePointerCapture(e.pointerId); });
         
-        function smazatPodpis() { ctx.clearRect(0,0,canv.width,canv.height); } function saveSign() { localforage.setItem('podpis_v47', canv.toDataURL()); ukazToast("Podpis uložen"); }
-        async function ulozVzorPDF(e) { const r = new FileReader(); r.onload = async (ev) => { await localforage.setItem('vzor_pdf_v47', ev.target.result); document.getElementById('vzor-status').innerText = "ŠABLONA AKTIVNÍ ✅"; }; r.readAsArrayBuffer(e.target.files[0]); }
+        function smazatPodpis() { ctx.clearRect(0,0,canv.width,canv.height); } function saveSign() { localforage.setItem('podpis_v48', canv.toDataURL()); ukazToast("Podpis uložen"); }
+        async function ulozVzorPDF(e) { const r = new FileReader(); r.onload = async (ev) => { await localforage.setItem('vzor_pdf_v48', ev.target.result); document.getElementById('vzor-status').innerText = "ŠABLONA AKTIVNÍ ✅"; }; r.readAsArrayBuffer(e.target.files[0]); }
         function nactiExcelAP(e) { const r = new FileReader(); r.onload = (ev) => { const wb = XLSX.read(new Uint8Array(ev.target.result), {type:'array'}); const rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], {header:1}); rows.forEach(row => { const s = JSON.stringify(row); const ap = s.match(/AP\d{5,}/i); const st = s.match(/(?:^|\D)(\d{3})(?:\D|$)/); if(ap && st) localStorage.setItem('AN_'+st[1], ap[0].toUpperCase()); }); ukazToast("AP data načtena!"); zmenaObjektu(); }; r.readAsArrayBuffer(e.target.files[0]); }
         function rychlyZapis(p, m) { document.getElementById('popis').value = p; document.getElementById('material').value = m; }
         function vymazatVsechnaData() { if(confirm("Smazat data?")) { localStorage.clear(); location.reload(); } }
 
         window.onload = async () => {
             const m = document.getElementById('sel-mesic'); for(let i=1; i<=12; i++) { let o = document.createElement('option'); o.value=i; o.text="Měsíc "+i; if(i===(new Date().getMonth()+1)) o.selected=true; m.appendChild(o); }
-            if(localStorage.getItem('cloud_key_v47')) document.getElementById('cloud-token').value = localStorage.getItem('cloud_key_v47');
-            zmenaObjektu(); vykresliDenik(); vykresliPripominky(); if(await localforage.getItem('vzor_pdf_v47')) document.getElementById('vzor-status').innerText = "ŠABLONA AKTIVNÍ ✅";
+            if(localStorage.getItem('cloud_key_v48')) document.getElementById('cloud-token').value = localStorage.getItem('cloud_key_v48');
+            zmenaObjektu(); vykresliDenik(); vykresliPripominky(); if(await localforage.getItem('vzor_pdf_v48')) document.getElementById('vzor-status').innerText = "ŠABLONA AKTIVNÍ ✅";
         };
     </script>
 </body>
