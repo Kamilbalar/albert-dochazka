@@ -1,54 +1,121 @@
-async function generujAlbertPDF() {
-    try {
-        const vzor = await localforage.getItem('vzor_pdf_v51'); 
-        if(!vzor) { ukazToast("Chyba: Nahraj PDF vzor!", "error"); return; }
-        
-        const { PDFDocument, StandardFonts } = PDFLib; 
-        const pdfDoc = await PDFDocument.load(vzor);
-        
-        // ZAJIŠTĚNÍ FONTU - toto je klíčové, aby to nepadalo
-        const font = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
-        const pages = pdfDoc.getPages();
-        const page = pages[0];
-        
-        const storeId = document.getElementById('global-prodejna').value; 
-        const mes = document.getElementById('sel-mesic').value;
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>JARVIS MASTER 50.1</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/localforage/1.10.0/localforage.min.js"></script>
+    <style>
+        body { background: #000; color: #fff; font-family: sans-serif; padding-bottom: 100px; }
+        .glass-card { background: #1a1a1a; border-radius: 20px; padding: 20px; margin: 10px; border: 1px solid #333; }
+        .page { display: none; }
+        .page.active { display: block; }
+        #signature-pad { background: #fff; width: 100%; height: 150px; border-radius: 10px; touch-action: none; }
+    </style>
+</head>
+<body>
 
-        // Kreslení textu
-        page.drawText(storeId, { x: 220, y: 670, size: 10, font: font }); 
-        page.drawText(`${mes}/2026`, { x: 480, y: 670, size: 10, font: font });
+    <header class="fixed top-0 w-full bg-black border-b border-white/10 p-4">
+        <select id="global-prodejna" onchange="zmenaObjektu()" class="bg-black text-white font-bold text-xl w-full">
+            <option value="171">171 - Třebíč Komenského</option>
+            <option value="851">851 - Třebíč Jaroše</option>
+            <option value="403">403 - Třebíč Modřínová</option>
+        </select>
+    </header>
 
-        // Data z deníku
-        let db = JSON.parse(localStorage.getItem(DB_KEY) || "[]");
-        let storeLogs = db.filter(z => z.prodejna.includes(storeId));
-        
-        let y = 560;
-        storeLogs.slice(0, 5).forEach((z) => {
-            page.drawText(z.datum, { x: 50, y: y, size: 8, font: font });
-            page.drawText(z.popis.substring(0, 30), { x: 170, y: y, size: 8, font: font });
-            page.drawText((z.trvani / 60).toFixed(1), { x: 530, y: y, size: 8, font: font });
-            y -= 90;
-        });
+    <div id="main-content" class="pt-20">
+        <div id="page-prace" class="page active">
+            <div class="glass-card text-center">
+                <div id="active-timer-clock" class="text-5xl font-bold">00:00:00</div>
+                <button onclick="toggleStopky()" id="btn-stopky" class="w-full mt-4 py-3 bg-sky-600 rounded-xl font-bold">START / STOP</button>
+            </div>
+            <div class="glass-card">
+                <textarea id="popis" class="w-full bg-black text-white p-2" placeholder="Popis práce..."></textarea>
+                <button onclick="ulozitDoDatabaze()" class="w-full mt-2 py-3 bg-green-600 rounded-xl">ULOŽIT ZÁZNAM</button>
+            </div>
+        </div>
 
-        // Podpis
-        const sB64 = await localforage.getItem('podpis_v51'); 
-        if(sB64) { 
-            const pngImage = await pdfDoc.embedPng(sB64);
-            page.drawImage(pngImage, { x: 280, y: 630, width: 70, height: 25 }); 
+        <div id="page-albert" class="page">
+            <div class="glass-card">
+                <button onclick="document.getElementById('pdf-vzor').click()" class="w-full py-2 bg-gray-800">Nahrát PDF šablonu</button>
+                <input type="file" id="pdf-vzor" accept="application/pdf" class="hidden" onchange="ulozVzorPDF(event)">
+                <button onclick="generujAlbertPDF()" class="w-full mt-4 py-4 bg-amber-600 rounded-xl font-bold">VYGENEROVAT PDF</button>
+                <div class="mt-4"><canvas id="signature-pad"></canvas></div>
+                <button onclick="smazatPodpis()" class="mt-2 w-full bg-red-600 py-2">Smazat podpis</button>
+                <button onclick="saveSign()" class="mt-2 w-full bg-blue-600 py-2">Uložit podpis</button>
+            </div>
+        </div>
+    </div>
+
+    <nav class="fixed bottom-0 w-full bg-black border-t border-white/10 flex justify-around p-4">
+        <button onclick="switchPage('prace')">⏱️ Práce</button>
+        <button onclick="switchPage('albert')">📄 PDF</button>
+    </nav>
+
+    <script>
+        const DB_KEY = 'KAMIL_LOGS_V50';
+        let timerStart = null;
+
+        function switchPage(id) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.getElementById('page-'+id).classList.add('active');
+            if(id === 'albert') kalibrovatPodpis();
         }
+
+        function toggleStopky() {
+            if(timerStart) {
+                timerStart = null; alert("Zastaveno");
+            } else {
+                timerStart = new Date(); alert("Spuštěno");
+            }
+        }
+
+        function ulozitDoDatabaze() {
+            let db = JSON.parse(localStorage.getItem(DB_KEY) || "[]");
+            db.push({ datum: new Date().toLocaleDateString(), prodejna: document.getElementById('global-prodejna').value, popis: document.getElementById('popis').value, trvani: 60 });
+            localStorage.setItem(DB_KEY, JSON.stringify(db));
+            alert("Uloženo!");
+        }
+
+        async function generujAlbertPDF() {
+            try {
+                const vzor = await localforage.getItem('vzor_pdf');
+                if(!vzor) { alert("Nahraj vzor PDF!"); return; }
+                
+                const { PDFDocument, StandardFonts } = PDFLib;
+                const pdfDoc = await PDFDocument.load(vzor);
+                const font = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+                const page = pdfDoc.getPages()[0];
+
+                page.drawText("Objekt: " + document.getElementById('global-prodejna').value, { x: 50, y: 700, size: 12, font: font });
+
+                const sB64 = await localforage.getItem('podpis');
+                if(sB64) {
+                    const pngImage = await pdfDoc.embedPng(sB64);
+                    page.drawImage(pngImage, { x: 50, y: 50, width: 100, height: 50 });
+                }
+
+                const pdfBytes = await pdfDoc.save();
+                const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = "Vykaz.pdf";
+                a.click();
+            } catch(e) { alert("Chyba v PDF: " + e.message); }
+        }
+
+        const canv = document.getElementById('signature-pad');
+        const ctx = canv.getContext('2d');
+        function kalibrovatPodpis() { canv.width = canv.offsetWidth; canv.height = canv.offsetHeight; ctx.lineWidth = 3; }
+        canv.addEventListener('pointerdown', (e) => { ctx.beginPath(); ctx.moveTo(e.offsetX, e.offsetY); });
+        canv.addEventListener('pointermove', (e) => { if(e.buttons) { ctx.lineTo(e.offsetX, e.offsetY); ctx.stroke(); } });
         
-        const pdfBytes = await pdfDoc.save();
-        const blob = new Blob([pdfBytes], { type: 'application/pdf' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a'); 
-        a.href = url; 
-        a.download = "Vykaz.pdf";
-        document.body.appendChild(a); 
-        a.click(); 
-        document.body.removeChild(a);
-        ukazToast("PDF vygenerováno!");
-    } catch(e) { 
-        ukazToast("Chyba: " + e.message, "error"); 
-        console.error(e);
-    }
-}
+        function smazatPodpis() { ctx.clearRect(0,0,canv.width,canv.height); }
+        function saveSign() { localforage.setItem('podpis', canv.toDataURL()); alert("Podpis uložen"); }
+        async function ulozVzorPDF(e) { const r = new FileReader(); r.onload = async (ev) => { await localforage.setItem('vzor_pdf', ev.target.result); alert("Vzor nahrán"); }; r.readAsArrayBuffer(e.target.files[0]); }
+    </script>
+</body>
+</html>
