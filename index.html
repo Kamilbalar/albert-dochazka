@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta name="theme-color" content="#020617">
-    <title>JARVIS OMNI 79.0 VISION</title>
+    <title>JARVIS OMNI 80.0 VISION</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Inter:wght@400;600;800;900&display=swap" rel="stylesheet">
@@ -42,7 +42,6 @@
     <div id="loader-overlay"><div class="spinner mb-5"></div><div id="loader-text" class="text-sky-400 font-black tracking-widest uppercase text-center mt-3">Zpracovávám...</div></div>
     <div id="toast-container" class="fixed top-24 left-0 right-0 z-[100] flex flex-col items-center space-y-2 p-4 pointer-events-none"></div>
 
-    <!-- Nápověda materiálů -->
     <datalist id="seznam-materialu">
         <option value="Silikon, sanitární tmel, těsnění">
         <option value="Spojovací materiál, vruty">
@@ -101,7 +100,7 @@
                 <button id="btn-stopky" onclick="toggleStopky()" class="w-full py-6 bg-gradient-to-r from-sky-500 to-blue-700 rounded-2xl font-black text-white text-lg uppercase shadow-[0_10px_30px_rgba(2,132,199,0.5)] tracking-wider">▶ ZAHÁJIT VÝJEZD</button>
             </div>
 
-            <!-- NOVINKA: SKENER ÚČTENEK -->
+            <!-- OPRAVENÝ SKENER ÚČTENEK (S PROGRESS BAREM) -->
             <div class="glass-card p-6 border-t-4 border-indigo-500">
                 <h3 class="text-sm font-black uppercase text-indigo-400 tracking-widest mb-3 flex items-center gap-2">🧾 AI Skener Účtenek</h3>
                 <p class="text-xs text-slate-400 mb-4">Vyfoť účtenku za materiál. AI z ní přečte položky a sama k nim vymyslí a vyplní popis práce a materiál.</p>
@@ -109,6 +108,17 @@
                 <button onclick="document.getElementById('receipt-upload').click()" class="w-full py-5 bg-gradient-to-r from-indigo-600 to-purple-700 rounded-xl font-black text-white text-sm uppercase shadow-lg active:scale-95 transition-transform flex justify-center items-center gap-2">
                     <span class="text-2xl">📸</span> Skenovat Účtenku
                 </button>
+                
+                <!-- Vizuální ukazatel zpracování účtenky -->
+                <div id="receipt-progress-container" class="hidden mt-5 bg-slate-900 rounded-xl p-4 border border-indigo-500/30 shadow-inner">
+                    <div class="text-[10px] font-bold text-indigo-400 uppercase mb-2 flex justify-between">
+                        <span id="receipt-status-text">AI čte účtenku...</span>
+                        <span id="receipt-percent">0%</span>
+                    </div>
+                    <div class="w-full bg-black rounded-full h-2.5 overflow-hidden">
+                        <div id="receipt-progress-bar" class="bg-indigo-600 h-full rounded-full transition-all duration-300" style="width: 0%"></div>
+                    </div>
+                </div>
             </div>
 
             <div class="glass-card p-6 space-y-5 border-l-4 border-sky-500">
@@ -170,6 +180,10 @@
                     <input type="text" id="manualni-upominka" class="flex-1 text-sm" placeholder="Ruční úkol (např. WC do 25.5.)">
                     <button onclick="pridatManualniUpominku()" class="bg-rose-600 px-6 rounded-xl font-black text-xs uppercase text-white shadow-lg">Přidat</button>
                 </div>
+                <div id="ocr-progress-container" class="hidden mt-5 bg-slate-900 rounded-xl p-4 border border-rose-500/30">
+                    <div class="text-[10px] font-bold text-rose-400 uppercase mb-2 flex justify-between"><span id="ocr-status-text">Analyzuji text...</span><span id="ocr-percent">0%</span></div>
+                    <div class="w-full bg-black rounded-full h-2.5"><div id="ocr-progress-bar" class="bg-rose-600 h-full rounded-full" style="width: 0%"></div></div>
+                </div>
             </div>
             <div id="seznam-pripominek" class="space-y-4"></div>
         </div>
@@ -196,13 +210,13 @@
             <div id="seznam-zaznamu" class="space-y-4 pb-6"></div>
         </div>
 
-        <!-- ⭐ STRÁNKA 5: ALBERT PDF (NOVE ROZLOZENI SOUŘADNIC A KARET) -->
+        <!-- ⭐ STRÁNKA 5: ALBERT PDF -->
         <div id="page-albert" class="page space-y-6">
             <div class="glass-card p-6 border-t-4 border-amber-500">
                 <h2 class="text-amber-500 font-black text-xl uppercase tracking-wider mb-2 flex items-center gap-3">🖨️ Generátor Výkazu</h2>
                 <p class="text-[11px] text-slate-400 mb-6 leading-relaxed">
-                    <strong>1 den = 1 kolonka (přesně podle tvého ručního výkazu).</strong><br>
-                    Datum a AP budou vlevo. "Kontrola" a "1h" nahoře, práce dole.
+                    <strong>Tisk přesně dle tvého papírového vzoru.</strong><br>
+                    Datum a AP budou vlevo. "Kontrola" nahoře uprostřed. Hodiny budou rozdělené nad sebou.
                 </p>
                 
                 <div class="bg-slate-900 p-4 rounded-xl border border-slate-700 flex justify-between items-center mb-6 shadow-inner">
@@ -213,6 +227,7 @@
                 <label class="text-xs font-black text-slate-400 uppercase block mb-2 ml-1">Fakturační měsíc:</label>
                 <select id="sel-mesic" class="w-full bg-black font-black text-2xl p-5 rounded-2xl mb-6 text-white border-slate-700 shadow-inner"></select>
                 
+                <!-- KROK 1: NÁHLED KARET -->
                 <button onclick="sestavitNahledPDF()" class="w-full py-6 bg-slate-800 text-amber-400 border border-amber-500/40 rounded-2xl font-black text-sm uppercase shadow-lg active:scale-95 transition-transform hover:bg-slate-700">
                     ✨ 1. Sestavit Inteligentní Náhled
                 </button>
@@ -265,7 +280,6 @@
                     <span>📥 Nahrát Excel (Odečty)</span><span class="text-xl">📊</span>
                 </button>
 
-                <!-- AP KÓDY JSOU ZPĚT -->
                 <input type="file" id="excel-upload-ap" accept=".xlsx,.xls,.csv" class="hidden" onchange="nactiExcelAP(event)">
                 <button onclick="document.getElementById('excel-upload-ap').click()" class="w-full py-5 bg-slate-800 text-slate-300 border border-slate-600 rounded-xl font-bold text-xs uppercase shadow-md flex justify-between px-5 items-center mb-8 hover:bg-slate-700">
                     <span>🔗 Spárovat čísla AP (Excel)</span><span class="text-xl">🔑</span>
@@ -288,21 +302,21 @@
         </div>
     </div>
 
-    <!-- 📱 NAVIGACE -->
+    <!-- 📱 NAVIGACE (OPRAVENO PŘEPÍNÁNÍ) -->
     <nav class="fixed bottom-0 left-0 right-0 bg-slate-950/95 border-t border-slate-800 z-50 overflow-x-auto no-scrollbar backdrop-blur-2xl shadow-[0_-15px_40px_rgba(0,0,0,0.8)] pb-safe">
         <div class="flex justify-between items-center px-1 min-w-[360px] pb-4 pt-2">
-            <button class="nav-item active flex flex-col items-center gap-1 flex-1 py-2" onclick="switchPage('prace')"><span class="text-[24px] drop-shadow-md">⏱️</span><span class="text-[9px] font-black uppercase mt-1">Práce</span></button>
-            <button class="nav-item flex flex-col items-center gap-1 flex-1 py-2" onclick="switchPage('odecty')"><span class="text-[24px] drop-shadow-md">⚡</span><span class="text-[9px] font-black uppercase mt-1">Odečty</span></button>
-            <button class="nav-item flex flex-col items-center gap-1 flex-1 py-2" onclick="switchPage('skener')"><span class="text-[24px] drop-shadow-md">📌</span><span class="text-[9px] font-black uppercase mt-1">Úkoly</span></button>
-            <button class="nav-item flex flex-col items-center gap-1 flex-1 py-2" onclick="switchPage('denik')"><span class="text-[24px] drop-shadow-md">📓</span><span class="text-[9px] font-black uppercase mt-1">Deník</span></button>
-            <button class="nav-item flex flex-col items-center gap-1 flex-1 py-2" onclick="switchPage('albert')"><span class="text-[24px] drop-shadow-md">📄</span><span class="text-[9px] font-black uppercase mt-1">PDF</span></button>
-            <button class="nav-item flex flex-col items-center gap-1 flex-1 py-2" onclick="switchPage('sef')"><span class="text-[24px] drop-shadow-md">⚙️</span><span class="text-[9px] font-black uppercase mt-1">Setup</span></button>
+            <button class="nav-item active flex flex-col items-center gap-1 flex-1 py-2" onclick="switchPage('prace', this)"><span class="text-[24px] drop-shadow-md">⏱️</span><span class="text-[9px] font-black uppercase mt-1">Práce</span></button>
+            <button class="nav-item flex flex-col items-center gap-1 flex-1 py-2" onclick="switchPage('odecty', this)"><span class="text-[24px] drop-shadow-md">⚡</span><span class="text-[9px] font-black uppercase mt-1">Odečty</span></button>
+            <button class="nav-item flex flex-col items-center gap-1 flex-1 py-2" onclick="switchPage('skener', this)"><span class="text-[24px] drop-shadow-md">📌</span><span class="text-[9px] font-black uppercase mt-1">Úkoly</span></button>
+            <button class="nav-item flex flex-col items-center gap-1 flex-1 py-2" onclick="switchPage('denik', this)"><span class="text-[24px] drop-shadow-md">📓</span><span class="text-[9px] font-black uppercase mt-1">Deník</span></button>
+            <button class="nav-item flex flex-col items-center gap-1 flex-1 py-2" onclick="switchPage('albert', this)"><span class="text-[24px] drop-shadow-md">📄</span><span class="text-[9px] font-black uppercase mt-1">PDF</span></button>
+            <button class="nav-item flex flex-col items-center gap-1 flex-1 py-2" onclick="switchPage('sef', this)"><span class="text-[24px] drop-shadow-md">⚙️</span><span class="text-[9px] font-black uppercase mt-1">Setup</span></button>
         </div>
     </nav>
 
     <!-- ZÁKLADNÍ JAVASCRIPT A LOGIKA -->
     <script>
-        const DB_KEY = 'KAMIL_OMNI_V79_VISION';
+        const DB_KEY = 'KAMIL_OMNI_V80_VISION';
         const PDF_TEMPLATE_KEY = 'JARVIS_PDF_TEMPLATE_PERMANENT';
         const EXCEL_TEMPLATE_KEY = 'JARVIS_EXCEL_TEMPLATE_PERMANENT';
         const SIGNATURE_KEY = 'JARVIS_SIGNATURE_PERMANENT';
@@ -322,33 +336,30 @@
             "735": { lat: 49.245850, lon: 15.766750 }
         };
 
-        // --- ZÁKLADNÍ FONDY HODIN ---
         let FOND_BARAKU = JSON.parse(localStorage.getItem(FONDY_KEY)) || { "171": 19, "851": 12, "403": 8, "022": 20, "025": 18, "026": 16, "125": 10, "735": 8 };
 
-        // --- MASIVNÍ KNIHOVNA ÚKONŮ PRO PDF FILLER ---
         const SMART_TASKS = [
-            { popis: "Čištění odpadů a vtokových kanálků v zázemí", mat: "Čistící prostředky, dezinfekce" },
-            { popis: "Seřízení dveří, oprava pantů a samozavírače", mat: "Mazivo, spojovací materiál" },
+            { popis: "Čištění odpadů a vtokových kanálků", mat: "Čistící prostředky, dezinfekce" },
+            { popis: "Seřízení dveří a oprava pantů", mat: "Mazivo, spojovací materiál" },
             { popis: "Oprava poškozených regálů a regálových lišt", mat: "Spojovací materiál, vruty" },
             { popis: "Oprava a údržba WC, výměna těsnění", mat: "Silikon, těsnění" },
-            { popis: "Oprava šatních skříněk pro zaměstnance", mat: "Zámky, spojovací materiál" },
+            { popis: "Oprava šatních skříněk v zázemí", mat: "Zámky, spojovací materiál" },
             { popis: "Čištění mucholapek, výměna lapačů", mat: "Náhradní náplně a lepy" },
-            { popis: "Oprava a upevnění ochranných zábran na prodejně", mat: "Kotevní materiál, šrouby" },
-            { popis: "Výměna poškozených stropních desek a podhledů", mat: "Stropní kazety" },
-            { popis: "Dotažení vodovodní baterie a přetěsnění úniku", mat: "Těsnění, teflonová páska" },
+            { popis: "Oprava a upevnění ochranných zábran", mat: "Kotevní materiál, šrouby" },
+            { popis: "Výměna poškozených stropních desek", mat: "Stropní kazety" },
+            { popis: "Dotažení vodovodní baterie a oprava úniku", mat: "Těsnění, teflonová páska" },
             { popis: "Drobné opravy elektroinstalace, výměna zdrojů", mat: "Žárovky, WAGO svorky" },
-            { popis: "Lokální oprava dlažby, lina a podlahových lišt", mat: "Tmel, lepidlo, akryl" },
-            { popis: "Zapravení děr ve zdi, lokální výmalba", mat: "Sádra, stěrka, barva" }
+            { popis: "Lokální oprava dlažby a podlahových lišt", mat: "Tmel, lepidlo, akryl" },
+            { popis: "Oprava nákupních vozíků a koleček", mat: "Mazivo, náhradní díly" }
         ];
 
-        // --- HAPTIKA A UI ---
         function hapticFeedback() { if (navigator.vibrate) navigator.vibrate(40); }
         
         function probuditAudio() {
             if(!audioUnlocked && 'speechSynthesis' in window) {
                 audioUnlocked = true;
                 let h = new Date().getHours(); let p = h < 10 ? "Dobré ráno" : (h > 18 ? "Dobrý večer" : "Dobrý den");
-                mluv(`${p} Kamile. OMNI systém spuštěn.`); initGPS();
+                mluv(`${p} Kamile. OMNI systém 80 spuštěn.`); initGPS();
             }
         }
         function mluv(t) { if(audioUnlocked && 'speechSynthesis' in window) { window.speechSynthesis.cancel(); const m = new SpeechSynthesisUtterance(t); m.lang='cs-CZ'; window.speechSynthesis.speak(m); } }
@@ -363,31 +374,51 @@
         function showLoader(text = "Zpracovávám...") { document.getElementById('loader-text').innerText = text; document.getElementById('loader-overlay').style.display = 'flex'; }
         function hideLoader() { document.getElementById('loader-overlay').style.display = 'none'; }
         
-        function autoSaveDraft() { localStorage.setItem('draft_popis_v79', document.getElementById('popis').value); }
+        function autoSaveDraft() { localStorage.setItem('draft_popis_v80', document.getElementById('popis').value); }
         setInterval(autoSaveDraft, 2000); 
 
         function updateDate() { const d = new Date(); document.getElementById('datum-dnes').innerText = d.toLocaleDateString('cs-CZ', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }); }
 
-        function switchPage(id) { 
-            hapticFeedback(); document.querySelectorAll('.page').forEach(p => p.classList.remove('active')); document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active')); document.getElementById('page-'+id).classList.add('active'); event.currentTarget.classList.add('active');
-            if(id === 'sef') setTimeout(kalibrovatPodpis, 300); if(id === 'odecty') vykresliOdectyUI(); window.scrollTo(0,0);
+        // --- OPRAVA NAVIGACE PRO MOBILY ---
+        function switchPage(id, btnElement) { 
+            hapticFeedback(); 
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active')); 
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active')); 
+            document.getElementById('page-'+id).classList.add('active'); 
+            if(btnElement) btnElement.classList.add('active'); 
+            if(id === 'sef') setTimeout(kalibrovatPodpis, 300); 
+            if(id === 'odecty') vykresliOdectyUI(); 
+            window.scrollTo(0,0);
         }
 
-        // --- SKENER ÚČTENEK (AI VISION) ---
+        // --- VYLEPŠENÝ SKENER ÚČTENEK S UKAZATELEM ---
         async function skenujUctenku(event) {
             const file = event.target.files[0]; if(!file) return;
-            showLoader("AI čte účtenku\nHledám materiál...");
+            const container = document.getElementById('receipt-progress-container');
+            const bar = document.getElementById('receipt-progress-bar');
+            const pctText = document.getElementById('receipt-percent');
+            
+            container.classList.remove('hidden');
+            bar.style.width = "0%"; pctText.innerText = "0%";
+            
             try {
                 const worker = await Tesseract.createWorker('ces');
-                const { data: { text } } = await worker.recognize(file);
+                const { data: { text } } = await worker.recognize(file, 'ces', { 
+                    logger: m => { 
+                        if (m.status === 'recognizing text') { 
+                            let p = Math.round(m.progress * 100); 
+                            bar.style.width = p + "%"; 
+                            pctText.innerText = p + "%"; 
+                        } 
+                    } 
+                });
                 await worker.terminate();
 
                 let txt = text.toLowerCase();
-                let detekovanyMat = [];
-                let detekovanaPrace = [];
+                let detekovanyMat = []; let detekovanaPrace = [];
 
                 if(txt.includes('silikon') || txt.includes('tmel') || txt.includes('akryl')) { detekovanyMat.push("Silikon/tmel"); detekovanaPrace.push("Přetěsnění a oprava spár"); }
-                if(txt.includes('baterie') || txt.includes('sifon') || txt.includes('tesnen')) { detekovanyMat.push("Instalatérský materiál"); detekovanaPrace.push("Výměna a oprava sanitárního vybavení"); }
+                if(txt.includes('baterie') || txt.includes('sifon') || txt.includes('tesnen') || txt.includes('těsněn')) { detekovanyMat.push("Instalatérský materiál"); detekovanaPrace.push("Výměna a oprava sanitárního vybavení"); }
                 if(txt.includes('žárov') || txt.includes('zářiv') || txt.includes('kabel') || txt.includes('wago')) { detekovanyMat.push("Elektro materiál"); detekovanaPrace.push("Oprava elektroinstalace a výměna osvětlení"); }
                 if(txt.includes('vrut') || txt.includes('hřebík') || txt.includes('šroub') || txt.includes('hmožd')) { detekovanyMat.push("Spojovací materiál"); detekovanaPrace.push("Upevnění a oprava poškozených prvků"); }
                 if(txt.includes('sádra') || txt.includes('barva') || txt.includes('štětec')) { detekovanyMat.push("Sádra/barva"); detekovanaPrace.push("Zapravení děr a lokální výmalba"); }
@@ -399,9 +430,12 @@
                 document.getElementById('material').value = finalMat;
                 document.getElementById('popis').value = finalPrace;
 
-                hideLoader();
+                container.classList.add('hidden');
                 ukazToast("Účtenka zpracována! Můžeš text upravit.", "success");
-            } catch (e) { hideLoader(); ukazToast("Chyba při čtení účtenky.", "error"); }
+            } catch (e) { 
+                container.classList.add('hidden'); 
+                ukazToast("Chyba při čtení účtenky.", "error"); 
+            }
             event.target.value = null;
         }
 
@@ -439,9 +473,9 @@
 
         // --- NÁKUPY ---
         function zmenaPoznamekObjektu() { const id = document.getElementById('global-prodejna').value; document.getElementById('notes-barak-title').innerText = id; vykresliNakupPolozky(); }
-        function pridatPolozkuNakupu() { hapticFeedback(); const id = document.getElementById('global-prodejna').value; const input = document.getElementById('input-novy-nakup'); const text = input.value.trim(); if(!text) return; let db = JSON.parse(localStorage.getItem('nakupy_v79_' + id) || "[]"); db.push({ id: Date.now(), text: text, koupeno: false }); localStorage.setItem('nakupy_v79_' + id, JSON.stringify(db)); input.value = ""; vykresliNakupPolozky(); }
+        function pridatPolozkuNakupu() { hapticFeedback(); const id = document.getElementById('global-prodejna').value; const input = document.getElementById('input-novy-nakup'); const text = input.value.trim(); if(!text) return; let db = JSON.parse(localStorage.getItem('nakupy_v80_' + id) || "[]"); db.push({ id: Date.now(), text: text, koupeno: false }); localStorage.setItem('nakupy_v80_' + id, JSON.stringify(db)); input.value = ""; vykresliNakupPolozky(); }
         function vykresliNakupPolozky() {
-            const id = document.getElementById('global-prodejna').value; const db = JSON.parse(localStorage.getItem('nakupy_v79_' + id) || "[]"); const box = document.getElementById('list-nakup-polozky');
+            const id = document.getElementById('global-prodejna').value; const db = JSON.parse(localStorage.getItem('nakupy_v80_' + id) || "[]"); const box = document.getElementById('list-nakup-polozky');
             if(db.length === 0) { box.innerHTML = `<div class="text-center py-4 text-slate-500 text-xs italic">Seznam je čistý.</div>`; return; }
             box.innerHTML = db.map(p => `
                 <div class="flex justify-between items-center bg-slate-800 p-3.5 rounded-xl ${p.koupeno ? 'opacity-40' : ''} shadow-sm border border-slate-700 mb-2">
@@ -452,8 +486,8 @@
                     </div>
                 </div>`).join('');
         }
-        function skrtnoutNakup(barakId, polozkaId) { hapticFeedback(); let db = JSON.parse(localStorage.getItem('nakupy_v79_' + barakId) || "[]"); db = db.map(p => p.id === polozkaId ? { ...p, koupeno: !p.koupeno } : p); localStorage.setItem('nakupy_v79_' + barakId, JSON.stringify(db)); vykresliNakupPolozky(); }
-        function smazatNakup(barakId, polozkaId) { hapticFeedback(); let db = JSON.parse(localStorage.getItem('nakupy_v79_' + barakId) || "[]"); db = db.filter(p => p.id !== polozkaId); localStorage.setItem('nakupy_v79_' + barakId, JSON.stringify(db)); vykresliNakupPolozky(); }
+        function skrtnoutNakup(barakId, polozkaId) { hapticFeedback(); let db = JSON.parse(localStorage.getItem('nakupy_v80_' + barakId) || "[]"); db = db.map(p => p.id === polozkaId ? { ...p, koupeno: !p.koupeno } : p); localStorage.setItem('nakupy_v80_' + barakId, JSON.stringify(db)); vykresliNakupPolozky(); }
+        function smazatNakup(barakId, polozkaId) { hapticFeedback(); let db = JSON.parse(localStorage.getItem('nakupy_v80_' + barakId) || "[]"); db = db.filter(p => p.id !== polozkaId); localStorage.setItem('nakupy_v80_' + barakId, JSON.stringify(db)); vykresliNakupPolozky(); }
 
         // --- ZÁPIS PRÁCE A DENÍK ---
         function toggleDiktovani() {
@@ -468,7 +502,7 @@
 
         function zmenaObjektu() { 
             const id = document.getElementById('global-prodejna').value; zmenaPoznamekObjektu(); 
-            document.getElementById('popis').value = localStorage.getItem('draft_popis_v79') || ""; 
+            document.getElementById('popis').value = localStorage.getItem('draft_popis_v80') || ""; 
             document.getElementById('material').value = ""; 
             aktulizujKalkulatorHodin();
         }
@@ -513,17 +547,16 @@
             localStorage.setItem(DB_KEY, JSON.stringify(db)); 
             
             document.getElementById('popis').value = ""; document.getElementById('material').value = ""; 
-            localStorage.removeItem('draft_popis_v79'); 
+            localStorage.removeItem('draft_popis_v80'); 
             
             ukazToast("Výtečně. Práce uložena."); vykresliDenik(); aktulizujKalkulatorHodin();
-            setTimeout(() => { switchPage('denik'); }, 500);
+            
+            // Switch using explicit logic
+            const btnDenik = document.querySelector(".nav-item[onclick*='denik']");
+            switchPage('denik', btnDenik);
         }
         function ulozManualniZaznam() { let m = parseInt(prompt("Odpracované minuty:","60")); if(!isNaN(m)) ulozitDoDatabaze(m); }
         function rychlyZapis(p, m) { hapticFeedback(); document.getElementById('popis').value = p; document.getElementById('material').value = m; }
-
-        function zpracujFotoZavady(e) { showLoader("Analyzuji obrázek..."); const f = e.target.files[0]; if(!f) { hideLoader(); return; } const r = new FileReader(); r.onload = function(ev) { const img = new Image(); img.onload = function() { const canvas = document.createElement('canvas'); const ctx = canvas.getContext('2d'); canvas.width = 400; canvas.height = img.height * (400 / img.width); ctx.drawImage(img, 0, 0, canvas.width, canvas.height); tempPhotoBase64 = canvas.toDataURL('image/jpeg', 0.6); document.getElementById('foto-nahled').style.backgroundImage = `url(${tempPhotoBase64})`; document.getElementById('foto-nahled').classList.remove('hidden'); hideLoader(); }; img.src = ev.target.result; }; r.readAsDataURL(f); }
-        function smazatFotoNahled() { hapticFeedback(); tempPhotoBase64 = null; document.getElementById('foto-nahled').classList.add('hidden'); }
-        function zvetsovatFotku(url) { document.getElementById('fullscreen-img').src = url; document.getElementById('fullscreen-viewer').style.display = 'flex'; }
 
         function vykresliDenik(filtr = "") {
             let db = JSON.parse(localStorage.getItem(DB_KEY) || "[]"); let m_celkem = 0; db.forEach(z => { m_celkem += z.trvani; });
@@ -540,7 +573,6 @@
                     <div class="text-white text-base font-black mb-3 leading-snug tracking-tight">${z.prodejna}</div>
                     <div class="text-[13px] whitespace-pre-wrap leading-relaxed border p-4 rounded-xl shadow-inner font-medium bg-slate-800/50 text-slate-200 border-slate-600">${z.popis}</div>
                     ${z.material && z.material !== '-' ? `<div class="text-emerald-400 text-[10px] font-black mt-4 uppercase bg-emerald-500/10 inline-block px-3 py-1.5 rounded-lg border border-emerald-500/20 shadow-sm">📦 ${z.material}</div>` : ''}
-                    ${z.foto ? `<div onclick="zvetsovatFotku('${z.foto}')" class="mt-4 w-full h-40 rounded-xl bg-cover bg-center border-2 border-slate-700 shadow-inner" style="background-image: url(${z.foto})"></div>` : ''}
                 </div>`
             }).join('');
         }
@@ -568,17 +600,17 @@
                     }
                 }
             });
-            localStorage.setItem('meridla_v79', JSON.stringify(nalezenaMeridla)); hideLoader(); ukazToast("Excel zpracován!"); vykresliOdectyUI(); e.target.value = null;
+            localStorage.setItem('meridla_v80', JSON.stringify(nalezenaMeridla)); hideLoader(); ukazToast("Excel zpracován!"); vykresliOdectyUI(); e.target.value = null;
         }
 
         function vykresliOdectyUI() {
             const id = document.getElementById('global-prodejna').value; const container = document.getElementById('seznam-meridel');
-            const dataStr = localStorage.getItem('meridla_v79');
+            const dataStr = localStorage.getItem('meridla_v80');
             if(!dataStr) { container.innerHTML = `<div class="text-center py-6 text-slate-500 text-xs italic bg-slate-900/40 rounded-xl border border-dashed border-slate-700">Nahraj Firemní Excel v Nastavení.</div>`; return; }
             const meridlaNaBaraku = JSON.parse(dataStr)[id] || [];
             if(meridlaNaBaraku.length === 0) { container.innerHTML = `<div class="text-center py-6 text-slate-500 text-xs bg-slate-900/40 rounded-xl">Žádná měřidla pro Albert ${id}.</div>`; return; }
             
-            const ulozeneOdecty = JSON.parse(localStorage.getItem('odecty_data_v79') || "{}");
+            const ulozeneOdecty = JSON.parse(localStorage.getItem('odecty_data_v80') || "{}");
             const skupiny = { "Elektro": [], "Voda": [], "Plyn / Teplo": [], "Ostatní": [] };
             meridlaNaBaraku.forEach(m => { if(skupiny[m.kategorie]) skupiny[m.kategorie].push(m); else skupiny["Ostatní"].push(m); });
 
@@ -603,30 +635,6 @@
             container.innerHTML = html;
         }
 
-        let aktualniMeterScan = null;
-        function triggerSkenOdectu(meterId) { hapticFeedback(); aktualniMeterScan = meterId; document.getElementById('odecty-sken-upload').click(); }
-
-        async function zpracujSkenOdectu(event) {
-            const file = event.target.files[0]; if(!file || !aktualniMeterScan) return; showLoader("AI čte číslo...");
-            try {
-                const worker = await Tesseract.createWorker('ces'); await worker.setParameters({ tessedit_char_whitelist: '0123456789.,' });
-                const { data: { text } } = await worker.recognize(file); await worker.terminate();
-                const cisla = text.replace(/,/g, '.').match(/\d+(\.\d+)?/g);
-                if(cisla && cisla.length > 0) {
-                    const nejvetsiCislo = cisla.reduce((a, b) => a.length > b.length ? a : b);
-                    document.getElementById('odect_val_' + aktualniMeterScan).value = nejvetsiCislo;
-                    hideLoader(); ukazToast("Přečteno!");
-                } else { hideLoader(); ukazToast("Nerozeznáno.", "error"); }
-            } catch(e) { hideLoader(); ukazToast("Chyba OCR.", "error"); }
-            event.target.value = null;
-        }
-
-        function ulozHodnotuOdectu(meterId) {
-            hapticFeedback(); const inputPole = document.getElementById('odect_val_' + meterId);
-            let db = JSON.parse(localStorage.getItem('odecty_data_v79') || "{}"); db[meterId] = inputPole.value; localStorage.setItem('odecty_data_v79', JSON.stringify(db));
-            inputPole.style.backgroundColor = "#064e3b"; setTimeout(() => inputPole.style.backgroundColor = "black", 500); ukazToast("Uloženo.");
-        }
-
         async function exportujOdectyDoExcelu() {
             try {
                 hapticFeedback(); const b64 = localStorage.getItem(EXCEL_TEMPLATE_KEY);
@@ -634,7 +642,7 @@
                 showLoader("Stahuji Excel...");
                 const buffer = Uint8Array.from(atob(b64), c => c.charCodeAt(0)).buffer;
                 const mesic = document.getElementById('sel-mesic-odecty').value; const headerHledanyText = `${mesic}p/2026`; 
-                const ulozeneOdecty = JSON.parse(localStorage.getItem('odecty_data_v79') || "{}");
+                const ulozeneOdecty = JSON.parse(localStorage.getItem('odecty_data_v80') || "{}");
                 const wb = XLSX.read(buffer, {type:'array'});
                 
                 wb.SheetNames.forEach(sheetName => {
@@ -658,16 +666,16 @@
         }
 
         // --- SKENER UPOMÍNEK ---
-        function pridatManualniUpominku() { hapticFeedback(); const input = document.getElementById('manualni-upominka'); const text = input.value.trim(); if(!text) return; let list = JSON.parse(localStorage.getItem('pripominky_v79') || "[]"); list.push({ id: Date.now(), text: text }); localStorage.setItem('pripominky_v79', JSON.stringify(list)); input.value = ""; vykresliPripominky(); }
+        function pridatManualniUpominku() { hapticFeedback(); const input = document.getElementById('manualni-upominka'); const text = input.value.trim(); if(!text) return; let list = JSON.parse(localStorage.getItem('pripominky_v80') || "[]"); list.push({ id: Date.now(), text: text }); localStorage.setItem('pripominky_v80', JSON.stringify(list)); input.value = ""; vykresliPripominky(); }
         async function skenujObrazek(event) {
             const file = event.target.files[0]; if(!file) return; document.getElementById('ocr-progress-container').classList.remove('hidden');
             try { const worker = await Tesseract.createWorker('ces'); const { data: { text } } = await worker.recognize(file); await worker.terminate();
                 document.getElementById('ocr-progress-container').classList.add('hidden');
-                if(text && text.trim().length > 5) { let list = JSON.parse(localStorage.getItem('pripominky_v79') || "[]"); list.push({ id: Date.now(), text: text.replace(/\s+/g, ' ') }); localStorage.setItem('pripominky_v79', JSON.stringify(list)); vykresliPripominky(); }
+                if(text && text.trim().length > 5) { let list = JSON.parse(localStorage.getItem('pripominky_v80') || "[]"); list.push({ id: Date.now(), text: text.replace(/\s+/g, ' ') }); localStorage.setItem('pripominky_v80', JSON.stringify(list)); vykresliPripominky(); }
             } catch (e) { document.getElementById('ocr-progress-container').classList.add('hidden'); } event.target.value = null;
         }
         function vykresliPripominky() {
-            const db = JSON.parse(localStorage.getItem('pripominky_v79') || "[]"); const box = document.getElementById('seznam-pripominek');
+            const db = JSON.parse(localStorage.getItem('pripominky_v80') || "[]"); const box = document.getElementById('seznam-pripominek');
             if(db.length === 0) { box.innerHTML = `<div class="text-center py-6 text-slate-500 text-xs italic bg-slate-900/40 rounded-xl border border-dashed border-slate-700">Žádné tikety.</div>`; return; }
             box.innerHTML = db.map(p => `
                 <div class="glass-card p-4 border-l-4 border-rose-500 mb-3 shadow-lg">
@@ -677,9 +685,9 @@
                     </div>
                 </div>`).join('');
         }
-        function odskrtnoutPripominku(id) { hapticFeedback(); let db = JSON.parse(localStorage.getItem('pripominky_v79') || "[]"); db = db.filter(item => item.id !== id); localStorage.setItem('pripominky_v79', JSON.stringify(db)); vykresliPripominky(); }
+        function odskrtnoutPripominku(id) { hapticFeedback(); let db = JSON.parse(localStorage.getItem('pripominky_v80') || "[]"); db = db.filter(item => item.id !== id); localStorage.setItem('pripominky_v80', JSON.stringify(db)); vykresliPripominky(); }
 
-        // --- 🖨️ PDF BEAST FILLER: ROZDĚLENÉ SOUŘADNICE PODLE FOTKY ---
+        // --- 🖨️ PDF BEAST FILLER ---
         function wrapText(text, maxChars) {
             if (!text) return [""]; let paragraphs = text.split('\n'); let lines = [];
             paragraphs.forEach(p => { const words = p.split(' '); let currentLine = ""; words.forEach(word => { if ((currentLine + word).length > maxChars) { lines.push(currentLine.trim()); currentLine = word + " "; } else { currentLine += word + " "; } }); if(currentLine.trim() !== "") lines.push(currentLine.trim()); });
@@ -697,7 +705,6 @@
 
                 let pdfRadky = []; let ciloveHodiny = parseInt(FOND_BARAKU[storeId]) || 10; 
                 
-                // 1. AGREGACE - PRÁCE V JEDNOM DNI SE NESČÍTÁ DO VÍCE ŘÁDKŮ!
                 if (isNepravidelna) {
                     let combinedPopis = realneZaznamy.map(z => z.popis).filter(Boolean).join("\n");
                     let combinedMat = realneZaznamy.map(z => z.material).filter(m => m && m !== '-').join(", ") || "Spojovací mat., těsnění";
@@ -717,7 +724,6 @@
                         pdfRadky.push({ datum: d, popis: popisText.trim(), material: groupedByDate[d].mat.join(", ") || "-", trvani: groupedByDate[d].trvani, trvaniKontrola: 60 });
                     }
 
-                    // AI FILLER - KREATÍVNÍ VKLÁDÁNÍ
                     let odpracovanoMinut = pdfRadky.reduce((sum, r) => sum + r.trvani, 0); let chybejiciMinuty = (ciloveHodiny * 60) - odpracovanoMinut;
                     if (chybejiciMinuty > 0) {
                         let missingRows = 5 - pdfRadky.length;
@@ -742,11 +748,9 @@
                     }
                 }
                 
-                // SEŘAZENÍ CHRONOLOGICKY!
                 pdfRadky.sort((a,b) => parseInt(a.datum.split('.')[0]) - parseInt(b.datum.split('.')[0]));
                 pdfRadky = pdfRadky.slice(0, 5); while(pdfRadky.length < 5) { pdfRadky.push({ datum: "", popis: "", material: "", trvani: 0, trvaniKontrola: 0 }); }
 
-                // VYKRESLENÍ KARET (S ROZDĚLENÝMI HODINAMI DLE FOTKY)
                 const box = document.getElementById('pdf-radky-vstupy');
                 box.innerHTML = pdfRadky.map((r, i) => {
                     let hKontrola = r.trvaniKontrola > 0 ? (r.trvaniKontrola / 60).toFixed(1) : '';
@@ -795,8 +799,8 @@
                 const { PDFDocument } = PDFLib; const pdfDoc = await PDFDocument.load(Uint8Array.from(atob(vzorB64), c => c.charCodeAt(0)));
                 pdfDoc.registerFontkit(window.fontkit);
                 
-                let fontBytes = await localforage.getItem('roboto_font_79');
-                if(!fontBytes) { const res = await fetch('https://fonts.gstatic.com/s/roboto/v30/KFOmCnqEu92Fr1Me5WZLCzYlKw.ttf'); fontBytes = await res.arrayBuffer(); await localforage.setItem('roboto_font_79', fontBytes); }
+                let fontBytes = await localforage.getItem('roboto_font_80');
+                if(!fontBytes) { const res = await fetch('https://fonts.gstatic.com/s/roboto/v30/KFOmCnqEu92Fr1Me5WZLCzYlKw.ttf'); fontBytes = await res.arrayBuffer(); await localforage.setItem('roboto_font_80', fontBytes); }
                 const customFont = await pdfDoc.embedFont(fontBytes); const page = pdfDoc.getPages()[0]; 
                 
                 const storeId = document.getElementById('global-prodejna').value; const mes = document.getElementById('sel-mesic').value;
@@ -816,14 +820,11 @@
                     let hodPTxt = document.getElementById(`nahled-hodp-${i}`).value.trim();
 
                     if(datum && (parseFloat(hodKTxt) > 0 || parseFloat(hodPTxt) > 0)) {
-                        // SOUŘADNICE PŘESNĚ PODLE TVÉ FOTOGRAFIE!
-                        if(apNumber) page.drawText(apNumber, { x: 50, y: y + 15, size: 8, font: customFont }); // AP nahoře vlevo
-                        page.drawText(datum, { x: 50, y: y - 15, size: 8, font: customFont }); // Datum dole vlevo
+                        if(apNumber) page.drawText(apNumber, { x: 50, y: y + 15, size: 8, font: customFont }); 
+                        page.drawText(datum, { x: 50, y: y - 15, size: 8, font: customFont }); 
                         
-                        // "Kontrola technologií" nahoře uprostřed
                         page.drawText("Kontrola technologií", { x: 175, y: y + 15, size: 8, font: customFont });
                         
-                        // Ostatní práce se odřádkuje pod to
                         let fontSize = 8;
                         if(popis.length > 150) fontSize = 7;
                         
@@ -839,7 +840,6 @@
                             catch(err) { page.drawText(bezDiakritiky(line), { x: 390, y: y + 15 - (lineIndex * 10), size: 8, font: customFont }); }
                         });
                         
-                        // Rozdělené hodiny! Nahoře Kontrola, Dole Práce
                         if(hodKTxt) page.drawText(parseFloat(hodKTxt).toFixed(1), { x: 540, y: y + 15, size: 9, font: customFont });
                         if(hodPTxt) page.drawText(parseFloat(hodPTxt).toFixed(1), { x: 540, y: y - 15, size: 9, font: customFont });
                     }
@@ -927,9 +927,8 @@
             }; r.readAsDataURL(file); e.target.value = null;
         }
 
-        // --- ZÁLOHA A MIGRACE ---
         function exportZalohaJSON() {
-            hapticFeedback(); const vsechnaData = { logs: JSON.parse(localStorage.getItem(DB_KEY) || "[]"), odecty: JSON.parse(localStorage.getItem('odecty_data_v79') || "{}"), fondy: FOND_BARAKU };
+            hapticFeedback(); const vsechnaData = { logs: JSON.parse(localStorage.getItem(DB_KEY) || "[]"), odecty: JSON.parse(localStorage.getItem('odecty_data_v80') || "{}"), fondy: FOND_BARAKU };
             const blob = new Blob([JSON.stringify(vsechnaData, null, 2)], { type: 'application/json' });
             const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `Zaloha_JARVIS_${new Date().toISOString().slice(0,10)}.json`;
             document.body.appendChild(a); a.click(); document.body.removeChild(a);
@@ -941,11 +940,11 @@
             const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `Dochazka_Kamil_${new Date().toISOString().slice(0,10)}.csv`;
             document.body.appendChild(a); a.click(); document.body.removeChild(a);
         }
-        function vymazatVsechnaData() { hapticFeedback(); if(confirm("Smazat VŠE (Kromě šablon)? Tuto akci nelze vrátit!")) { localStorage.removeItem(DB_KEY); localStorage.removeItem('odecty_data_v79'); location.reload(); } }
+        function vymazatVsechnaData() { hapticFeedback(); if(confirm("Smazat VŠE (Kromě šablon)? Tuto akci nelze vrátit!")) { localStorage.removeItem(DB_KEY); localStorage.removeItem('odecty_data_v80'); location.reload(); } }
 
         function spustitMigraci() {
             let sloucenyDenik = []; 
-            const stareKlice = ['KAMIL_OMNI_V78_BEAST', 'KAMIL_OMNI_V77_PERFECT', 'KAMIL_OMNI_V76_ULTIMATE', 'KAMIL_OMNI_V75_PROFI'];
+            const stareKlice = ['KAMIL_OMNI_V79_VISION', 'KAMIL_OMNI_V78_BEAST', 'KAMIL_OMNI_V77_PERFECT', 'KAMIL_OMNI_V76_ULTIMATE', 'KAMIL_OMNI_V75_PROFI'];
             stareKlice.forEach(k => { let data = localStorage.getItem(k); if(data) { try { let p = JSON.parse(data); if(Array.isArray(p)) db = db.concat(p); } catch(e){} } });
             if(sloucenyDenik.length > 0 && !localStorage.getItem(DB_KEY)) {
                 let unikatni = []; const map = new Map();
